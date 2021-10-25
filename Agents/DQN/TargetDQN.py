@@ -7,11 +7,13 @@ class TargetDQN(DQN):
     """
     DQN with target network but no memory (ie: Vanilla DQN with target network)
     """
-    def __init__(self, env, config, layers, loss='smoothL1'):
+    def __init__(self, env, config, layers, loss='smoothL1', update_target=1000):
         super().__init__(env, config, layers, loss, memory_size=1)
         self.target_net = NN(self.featureExtractor.outSize, self.action_space.n, layers=layers)
+        self.update_target = update_target
+        self.n_learn = 0
 
-    def learn(self, done):
+    def learn(self, episode_done):
         last_transition = self.memory.sample(1)[-1][0]
         obs     = last_transition['obs']
         action  = last_transition['action']
@@ -22,13 +24,17 @@ class TargetDQN(DQN):
 
         with torch.no_grad():
             qhat_target = self.target_net(obs)
-            r = reward + self.discount * torch.max(qhat_target, dim=-1).values * (1 - done.float())
+            r = reward + self.discount * torch.max(qhat_target) if not done else torch.Tensor([reward])
 
-        loss = self.loss(r, torch.gather(qhat, -1, action.reshape(-1, 1).long()))
+        loss = self.loss(r, qhat[0, action])
         loss.backward()
 
         self.optim.step()
         self.optim.zero_grad()
 
-        if done:
+        self.n_learn += 1
+        if self.n_learn % (self.update_target // self.freq_optim) == 0:
+            self.target_net.load_state_dict(self.Q.state_dict())
+
+        if episode_done:
             self.explo *= self.decay

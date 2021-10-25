@@ -11,6 +11,8 @@ from matplotlib import pyplot as plt
 import yaml
 from datetime import datetime
 from Agents.DQN.DQN import DQN
+from Agents.DQN.ReplayDQN import ReplayDQN
+from Agents.DQN.TargetDQN import TargetDQN
 from Agents.DQN.minDQN import MinDQN
 
 matplotlib.use("Qt5agg")
@@ -18,8 +20,10 @@ matplotlib.use("Qt5agg")
 
 if __name__ == '__main__':
 
-    mode = ['DQN', 'minDQN', 'TargetDQN'][1]
+    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN'][2]
     env, config, outdir, logger = init('Training/configs/config_random_cartpole.yaml', mode)
+
+    torch.manual_seed(123456)
 
     torch.manual_seed(config['seed'])
     freqTest = config["freqTest"]
@@ -29,8 +33,11 @@ if __name__ == '__main__':
     np.random.seed(config["seed"])
     episode_count = config["nbEpisodes"]
 
-    agent = {'DQN': DQN(env, config, layers=[200]),
-             'minDQN': MinDQN(env, config, layers=[200])}[mode]
+    agent = {'DQN'          : DQN(env, config, layers=[200]),
+             'ReplayDQN'    : ReplayDQN(env, config, layers=[200]),
+             'TargetDQN'    : TargetDQN(env, config, layers=[200]),
+             'minDQN'       : MinDQN(env, config, layers=[200])
+             }[mode]
 
     rsum = 0
     mean = 0
