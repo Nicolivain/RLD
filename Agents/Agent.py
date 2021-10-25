@@ -26,10 +26,15 @@ class Agent(ABC):
         pass
 
     def save(self, path):
+        # TODO: fix the save bug
         """
         Unknown bug: can't pickle NoneType ??
         f = open(path, 'wb')
         pickle.dump(self, f)
         f.close()
         """
+        pass
+
+    def load(self, path):
+        # TODO
         pass
