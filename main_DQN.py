@@ -2,23 +2,24 @@ import argparse
 import sys
 import matplotlib
 import gym
-import gridworld
+import Tools.gridworld
 import torch
-from utils import *
-from core import *
+from Tools.utils import *
+from Tools.core import *
 from torch.utils.tensorboard import SummaryWriter
 from matplotlib import pyplot as plt
 import yaml
 from datetime import datetime
-from Agents import *
+from Agents.DQN.DQN import DQN
+from Agents.DQN.minDQN import MinDQN
 
 matplotlib.use("Qt5agg")
 # matplotlib.use("TkAgg")
 
 if __name__ == '__main__':
 
-    mode = ['RandomAgent', 'DQN', 'ReplayDQN', 'TargetDQN'][3]
-    env, config, outdir, logger = init('./configs/config_random_cartpole.yaml', mode)
+    mode = ['DQN', 'minDQN', 'TargetDQN'][1]
+    env, config, outdir, logger = init('Training/configs/config_random_cartpole.yaml', mode)
 
     torch.manual_seed(config['seed'])
     freqTest = config["freqTest"]
@@ -28,10 +29,8 @@ if __name__ == '__main__':
     np.random.seed(config["seed"])
     episode_count = config["nbEpisodes"]
 
-    agent = {'RandomAgent'  : RandomAgent(env, config),
-             'DQN'          : VanillaDQN(env, config, train_batch_size=1),
-             'ReplayDQN'    : ReplayDQN(env, config, replay_size=10000, batch_size=100),
-             'TargetDQN'    : TargetNetworkDQN(env, config, replay_size=10000, batch_size=100, target_update=1000)}[mode]
+    agent = {'DQN': DQN(env, config, layers=[200]),
+             'minDQN': MinDQN(env, config, layers=[200])}[mode]
 
     rsum = 0
     mean = 0
@@ -74,11 +73,14 @@ if __name__ == '__main__':
             env.render()
 
         new_ob = agent.featureExtractor.getFeatures(ob)
+
+        # TODO integrate this in Agent
+
         while True:
             if verbose:
                 env.render()
 
-            ob = new_ob
+            ob = torch.from_numpy(new_ob)
             action = agent.act(ob)
             new_ob, reward, done, _ = env.step(action)
             new_ob = agent.featureExtractor.getFeatures(new_ob)
@@ -90,11 +92,22 @@ if __name__ == '__main__':
                 done = True
                 print("forced done!")
 
-            agent.store(ob, action, new_ob, reward, done, j)
+            # select what to save
+
+            transition = {
+                'obs'       : ob,
+                'action'    : action,
+                'reward'    : reward,
+                'new_obs'   : torch.from_numpy(new_ob),
+                'done'      : done,
+                'it'        : j
+            }
+            agent.store(transition)
             rsum += reward
 
-            if agent.timeToLearn(done):
+            if agent.time_to_learn():
                 agent.learn(done)
+
             if done:
                 print(str(i) + " rsum=" + str(rsum) + ", " + str(j) + " actions ")
                 logger.direct_write("reward", rsum, i)

@@ -15,11 +15,22 @@ class DQN(Agent):
         self.loss             = torch.nn.SmoothL1Loss() if loss == 'smoothL1' else torch.nn.MSELoss()
         self.optim            = torch.optim.Adam(self.Q.parameters(), lr=self.alpha)
         self.memory           = Memory(memory_size)
-        self.batch_size       = batch_size
-        self.train_events     = 0
+        self.memory_size      = memory_size
+
+        self.freq_optim       = self.config.freqOptim
+        self.n_events         = 0
+
+    def time_to_learn(self):
+        if self.test:
+            return False
+        else:
+            self.n_events += 1
+            if self.n_events % self.freq_optim == 0:
+                return True
 
     def act(self, obs):
-        values = self.Q(obs)
+        with torch.no_grad():
+            values = self.Q(obs).numpy()
         if self.test:
             return pick_greedy(values)
         else:
@@ -31,7 +42,7 @@ class DQN(Agent):
                 raise NotImplementedError(f'{self.exploMode} does not correspond to any available exploration function')
 
     def learn(self, done):
-        last_transition = self.memory.sample(1)
+        last_transition = self.memory.sample(1)[-1][0]
         obs     = last_transition['obs']
         action  = last_transition['action']
         reward  = last_transition['reward']
@@ -42,11 +53,8 @@ class DQN(Agent):
         loss = self.loss(r, qhat[0, action])
         loss.backward()
 
-        self.train_events += 1
-        if self.train_events == self.batch_size:
-            self.optim.step()
-            self.optim.zero_grad()
-            self.train_events = 0
+        self.optim.step()
+        self.optim.zero_grad()
 
         if done:
             self.explo *= self.decay

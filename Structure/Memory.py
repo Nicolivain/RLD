@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 
 class SumTree:
@@ -123,6 +124,14 @@ class Memory:
         else:
             mask = np.random.choice(range(self.nentities), n)
             return mask, 0,  self.mem[mask]
+
+    def sample_batch(self, n_batch, batch_size):
+        _, _, experiences = self.sample(n_batch * batch_size)
+        batches = {}
+        for k in experiences[0].keys():
+            batches[k] = torch.from_numpy(np.vstack([e[k] for e in experiences])).reshape(n_batch, batch_size, -1)
+            batches[k] = torch.squeeze(batches[k])
+        return batches
 
     def update(self, idx, tderr):
         if self.prior:
