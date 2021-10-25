@@ -1,0 +1,18 @@
+env: LunarLander-v2
+seed: 5
+featExtractor: !!python/name:__main__.NothingToDo ''
+freqSave: 1000
+freqTest: 10
+nbTest: 1
+freqVerbose: 10
+freqOptim: 1                                                                          # Optimisation de la politique tous les freqOptim evenements
+fromFile: null
+nbEpisodes: 1000000
+maxLengthTest: 500                                                                    # Longueur maxi des trajectoires en Test
+maxLengthTrain: 100
+
+exploMode: 0                                                                          # Mode d'exploration. 0 = epsilon-greedy (les autres a regarder je sais plus)
+explo: 0.1                                                                            # coefficient d'exploration initial
+decay: 0.999                                                                          # a la fin de chaque trajectoire, le coefficient d'explo est multiplié par ce facteur
+gamma: 0.99                                                                           # Facteur de discount
+learningRate: 0.1
