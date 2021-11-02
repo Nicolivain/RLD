@@ -232,7 +232,7 @@ class GridworldEnv(discrete.DiscreteEnv):
                 observation[i * gs0:(i + 1) * gs0, j * gs1:(j + 1) * gs1] = np.array(COLORS[grid_map[i, j]])
         return observation
 
-    def render(self, pause=0.00001, mode='rgb_array', close=False):
+    def render(self, mode='rgb_array', pause=0.00001, close=False):
         if mode =='human' or mode =='ansi':
             outfile = StringIO() if mode == 'ansi' else sys.stdout
             desc = self.current_grid_map.tolist()
@@ -251,7 +251,7 @@ class GridworldEnv(discrete.DiscreteEnv):
         plt.clf()
         plt.imshow(img)
         fig.canvas.draw()
-        if pause>0:
+        if pause > 0:
             plt.pause(pause)
         return img
 

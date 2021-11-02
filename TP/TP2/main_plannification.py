@@ -16,7 +16,7 @@ if __name__ == '__main__':
     env.seed(0)  # Initialise le seed du pseudo-random
     np.random.seed(0)
 
-    env.render()  # permet de visualiser la grille du jeu
+#    env.render()  # permet de visualiser la grille du jeu
     env.render(mode="human")  # visualisation sur la console
     states, mdp = env.getMDP()  # récupère le mdp et la liste d'états
     print("Nombre d'etats : ", len(states))

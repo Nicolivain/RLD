@@ -1,6 +1,6 @@
 from Agents.DQN.DQN import DQN
-from Tools.core import NN
 import torch
+from copy import deepcopy
 
 
 class TargetDQN(DQN):
@@ -9,7 +9,7 @@ class TargetDQN(DQN):
     """
     def __init__(self, env, config, layers, loss='smoothL1', update_target=1000):
         super().__init__(env, config, layers, loss, memory_size=1)
-        self.target_net = NN(self.featureExtractor.outSize, self.action_space.n, layers=layers)
+        self.target_net = deepcopy(self.Q)
         self.update_target = update_target
         self.n_learn = 0
 
@@ -18,12 +18,13 @@ class TargetDQN(DQN):
         obs     = last_transition['obs']
         action  = last_transition['action']
         reward  = last_transition['reward']
+        new_obs = last_transition['new_obs']
         done    = last_transition['done']
 
         qhat = self.Q(obs)
 
         with torch.no_grad():
-            qhat_target = self.target_net(obs)
+            qhat_target = self.target_net(new_obs)
             r = reward + self.discount * torch.max(qhat_target) if not done else torch.Tensor([reward])
 
         loss = self.loss(r, qhat[0, action])
@@ -38,3 +39,5 @@ class TargetDQN(DQN):
 
         if episode_done:
             self.explo *= self.decay
+
+        return loss.item()

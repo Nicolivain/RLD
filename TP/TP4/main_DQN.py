@@ -20,7 +20,7 @@ matplotlib.use("Qt5agg")
 
 if __name__ == '__main__':
 
-    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN'][2]
+    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN'][1]
     env, config, outdir, logger = init('Training/configs/config_random_cartpole.yaml', mode)
 
     torch.manual_seed(123456)
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     agent = {'DQN'          : DQN(env, config, layers=[200]),
              'ReplayDQN'    : ReplayDQN(env, config, layers=[200]),
              'TargetDQN'    : TargetDQN(env, config, layers=[200]),
-             'minDQN'       : MinDQN(env, config, layers=[200])
+             'minDQN'       : MinDQN(env, config, layers=[32])
              }[mode]
 
     rsum = 0
@@ -113,11 +113,12 @@ if __name__ == '__main__':
             rsum += reward
 
             if agent.time_to_learn():
-                agent.learn(done)
+                loss = agent.learn(done)
 
             if done:
-                print(str(i) + " rsum=" + str(rsum) + ", " + str(j) + " actions ")
+                print(str(i) + " rsum=" + str(rsum) + ", " + str(j) + " actions " + f' loss: {loss}')
                 logger.direct_write("reward", rsum, i)
+                logger.direct_write('loss', loss, i)
                 agent.nbEvents = 0
                 mean += rsum
                 rsum = 0

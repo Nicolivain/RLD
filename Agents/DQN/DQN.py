@@ -11,7 +11,7 @@ class DQN(Agent):
         super().__init__(env, config)
 
         self.featureExtractor = config.featExtractor(env)
-        self.Q                = NN(self.featureExtractor.outSize, self.action_space.n, layers=layers, finalActivation=torch.nn.Tanh())
+        self.Q                = NN(self.featureExtractor.outSize, self.action_space.n, layers=layers, finalActivation=None)
         self.loss             = torch.nn.SmoothL1Loss() if loss == 'smoothL1' else torch.nn.MSELoss()
         self.optim            = torch.optim.Adam(self.Q.parameters(), lr=self.alpha)
         self.memory           = Memory(memory_size)
@@ -58,6 +58,8 @@ class DQN(Agent):
 
         if done:
             self.explo *= self.decay
+
+        return loss.item()
 
     def store(self, transition):
         self.memory.store(transition)
