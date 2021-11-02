@@ -7,7 +7,7 @@ class TargetDQN(DQN):
     """
     DQN with target network but no memory (ie: Vanilla DQN with target network)
     """
-    def __init__(self, env, config, layers, loss='smoothL1', update_target=1000):
+    def __init__(self, env, config, layers, loss='smoothL1', update_target=100):
         super().__init__(env, config, layers, loss, memory_size=1)
         self.target_net = deepcopy(self.Q)
         self.update_target = update_target
@@ -34,7 +34,8 @@ class TargetDQN(DQN):
         self.optim.zero_grad()
 
         self.n_learn += 1
-        if self.n_learn % (self.update_target // self.freq_optim) == 0:
+        if self.n_learn % self.update_target == 0:
+            print('Target net updated')
             self.target_net.load_state_dict(self.Q.state_dict())
 
         if episode_done:

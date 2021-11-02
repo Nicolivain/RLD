@@ -5,7 +5,7 @@ from copy import deepcopy
 
 
 class MinDQN(DQN):
-    def __init__(self, env, config, layers, loss='mse', memory_size=10000, batch_size=100, update_target=1000):
+    def __init__(self, env, config, layers, loss='mse', memory_size=10000, batch_size=100, update_target=100):
         super().__init__(env, config, layers, loss, memory_size)
         self.batch_size = batch_size
         self.target_net = deepcopy(self.Q)
@@ -43,7 +43,7 @@ class MinDQN(DQN):
             self.optim.zero_grad()
 
         self.n_learn += 1
-        if self.n_learn % (self.update_target // self.freq_optim):
+        if self.n_learn % self.update_target == 0:
             self.target_net.load_state_dict(self.Q.state_dict())
 
         if episode_done:
