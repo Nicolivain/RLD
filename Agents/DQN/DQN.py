@@ -62,4 +62,5 @@ class DQN(Agent):
         return loss.item()
 
     def store(self, transition):
-        self.memory.store(transition)
+        if not self.test:
+            self.memory.store(transition)

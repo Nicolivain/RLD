@@ -21,10 +21,12 @@ class ReplayDQN(DQN):
         train_loss = 0
         for i in range(self.memory_size // self.batch_size):
             obs, action, reward, new_obs, done = b_obs[i], b_action[i], b_reward[i].float(), b_next[i], b_done[i]
-            qhat = self.Q(new_obs)
 
-            r = reward + self.discount * torch.max(qhat, dim=-1).values * (1 - done.float())
+            qhat = self.Q(obs)
+            with torch.no_grad():
+                next_qhat = self.Q(new_obs)
 
+            r = reward + self.discount * torch.max(next_qhat, dim=-1).values * (1 - done.float())
             loss = self.loss(r, torch.gather(qhat, -1, action.reshape(-1, 1).long()))
             loss.backward()
             train_loss += loss.item()

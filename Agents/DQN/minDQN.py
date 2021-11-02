@@ -33,8 +33,8 @@ class MinDQN(DQN):
 
             with torch.no_grad():
                 qhat_target = self.target_net(new_obs)
-                r = reward + self.discount * torch.max(qhat_target, dim=-1).values * (1-done.float())
 
+            r = reward + self.discount * torch.max(qhat_target, dim=-1).values * (1-done.float())
             loss = self.loss(r, torch.gather(qhat, -1, action.reshape(-1, 1).long()))
             loss.backward()
             train_loss += loss.item()
