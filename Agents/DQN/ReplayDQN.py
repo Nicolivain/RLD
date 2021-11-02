@@ -20,7 +20,7 @@ class ReplayDQN(DQN):
 
         train_loss = 0
         for i in range(self.memory_size // self.batch_size):
-            obs, action, reward, new_obs, done = b_obs[i], b_action[i], b_reward[i].float(),b_next[i], b_done[i]
+            obs, action, reward, new_obs, done = b_obs[i], b_action[i], b_reward[i].float(), b_next[i], b_done[i]
             qhat = self.Q(new_obs)
 
             r = reward + self.discount * torch.max(qhat, dim=-1).values * (1 - done.float())

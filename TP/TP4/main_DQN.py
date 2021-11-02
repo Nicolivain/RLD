@@ -18,12 +18,11 @@ matplotlib.use("Qt5agg")
 
 if __name__ == '__main__':
 
-    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN'][2]
+    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN'][1]
     env, config, outdir, logger = init('Training/configs/config_random_cartpole.yaml', mode)
 
-    torch.manual_seed(123456)
-
     torch.manual_seed(config['seed'])
+    np.random.seed(config['seed'])
     freqTest = config["freqTest"]
     freqSave = config["freqSave"]
     nbTest = config["nbTest"]
