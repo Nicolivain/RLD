@@ -291,7 +291,7 @@ class convMDP(nn.Module):
 # Classe basique de NN générique
 # Accepte une liste de tailles de couches pour la variables layers (permet de définir la structure)
 class NN(nn.Module):
-    def __init__(self, inSize, outSize, layers=[], finalActivation=None, activation=torch.tanh,dropout=0.0):
+    def __init__(self, inSize, outSize, layers=[], finalActivation=None, activation=torch.tanh, dropout=0.0):
         super(NN, self).__init__()
         self.layers = nn.ModuleList([])
         for x in layers:
@@ -312,7 +312,7 @@ class NN(nn.Module):
         for i in range(1, len(self.layers)):
             x = self.activation(x)
             if self.dropout is not None:
-                x=self.dropout(x)
+                x = self.dropout(x)
 
             x = self.layers[i](x)
 

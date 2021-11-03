@@ -125,7 +125,7 @@ class Memory:
             mask = np.random.choice(range(self.nentities), n)
             return mask, 0,  self.mem[mask]
 
-    def sample_batch(self, n_batch, batch_size):
+    def sample_batch(self, batch_size, n_batch=1):
         _, _, experiences = self.sample(n_batch * batch_size)
         batches = {}
         for k in experiences[0].keys():

@@ -5,7 +5,7 @@ freqSave: 1000
 freqTest: 100
 nbTest: 1
 freqVerbose: 10000000000000000000
-freqOptim: 10                                                                          # Optimisation de la politique tous les freqOptim evenements
+freqOptim: 1                                                                          # Optimisation de la politique tous les freqOptim evenements
 fromFile: null
 nbEpisodes: 70000
 maxLengthTest: 500                                                                    # Longueur maxi des trajectoires en Test
@@ -13,5 +13,5 @@ maxLengthTrain: 300
 exploMode: 0                                                                          # Mode d'exploration. 0 = epsilon-greedy (les autres a regarder je sais plus)
 explo: 0.1                                                                            # coefficient d'exploration initial
 decay: 0.99999                                                                         # a la fin de chaque trajectoire, le coefficient d'explo est multiplié par ce facteur
-gamma: 0.999                                                                           # Facteur de discount
-learningRate: 0.0003
+gamma: 0.99                                                                           # Facteur de discount
+learningRate: 0.05
