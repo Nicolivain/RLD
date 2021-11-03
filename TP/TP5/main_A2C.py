@@ -18,7 +18,7 @@ matplotlib.use("Qt5agg")
 if __name__ == '__main__':
 
     mode = ['RandomAgent', 'A2C'][1]
-    env, config, outdir, logger = init('./configs/config_random_cartpole.yaml', mode)
+    env, config, outdir, logger = init('Training/configs/config_random_cartpole.yaml', mode)
 
     torch.manual_seed(config['seed'])
     freqTest = config["freqTest"]
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     episode_count = config["nbEpisodes"]
 
     agent = {
-             'A2C' : A2C(env, config)
+             'A2C' : A2C(env, config, layers=[200])
              }[mode]
 
     rsum = 0
@@ -38,6 +38,7 @@ if __name__ == '__main__':
     itest = 0
     reward = 0
     done = False
+    loss = -1
     for i in range(episode_count):
         checkConfUpdate(outdir, config)
 
@@ -101,11 +102,12 @@ if __name__ == '__main__':
             agent.memorize()
             rsum += reward
 
-            if agent.timeToLearn(done):
-                agent.learn(done)
+            if agent.time_to_learn:
+                loss = agent.learn(done)
             if done:
-                print(str(i) + " rsum=" + str(rsum) + ", " + str(j) + " actions ")
-                logger.direct_write("reward", rsum, i)
+                print(str(i) + " rsum=" + str(rsum) + ", " + str(j) + " actions " + f' loss: {loss}')
+                if loss > 0:
+                    logger.direct_write("reward", rsum, i)
                 agent.nbEvents = 0
                 mean += rsum
                 rsum = 0

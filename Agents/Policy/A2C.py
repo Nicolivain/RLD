@@ -50,6 +50,7 @@ class A2C(Agent):
             self.n_events += 1
             if self.n_events % self.freq_optim == 0:
                 return True
+            return False
 
     def learn(self, done):
 
@@ -66,22 +67,25 @@ class A2C(Agent):
         train_loss = 0
         for i in range(self.memory_size // self.batch_size):
             obs, action, reward, new, done, pi = b_obs[i], b_action[i], b_reward[i], b_new[i], b_done[i], b_pi[i]
+
             qhat = self.critic_net(new)
             with torch.no_grad():
-                r = (reward + self.discount * torch.max(qhat, dim=-1).values * (1 - done)).float()
-            loss = self.loss(r, torch.gather(qhat, -1, action.long()))
+                r = (reward + self.discount * torch.max(qhat, dim=-1).values * (~done)).float()
+
+            loss = self.loss(r, torch.gather(qhat, -1, action.reshape(-1, 1).long()).squeeze())
             loss.backward()
             train_loss += loss.item()
 
             self.optim_critic.step()
             self.optim_critic.zero_grad()
 
-            advantage = qhat * pi
+            with torch.no_grad():
+                advantage = qhat * pi
             for policy_sample, ad in zip(pi, advantage):
-                j += torch.log(policy_sample).T @ ad
+                j = j + torch.log(policy_sample).T @ ad
 
-        j = -j.mean()
-        j.backward()
+        inv_j = -1 * j
+        inv_j.backward()
         self.optim_policy.step()
         self.optim_policy.zero_grad()
 

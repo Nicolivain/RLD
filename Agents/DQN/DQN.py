@@ -46,10 +46,13 @@ class DQN(Agent):
         obs     = last_transition['obs']
         action  = last_transition['action']
         reward  = last_transition['reward']
+        new_obs = last_transition['new_obs']
         done    = last_transition['done']
 
         qhat = self.Q(obs)
-        r = reward + self.discount * torch.max(qhat) if not done else torch.Tensor([reward])
+        next_qhat = self.Q(new_obs)
+
+        r = reward + self.discount * torch.max(next_qhat) if not done else torch.Tensor([reward])
         loss = self.loss(r, qhat[0, action])
         loss.backward()
 

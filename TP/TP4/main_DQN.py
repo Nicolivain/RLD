@@ -18,7 +18,7 @@ matplotlib.use("Qt5agg")
 
 if __name__ == '__main__':
 
-    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN'][1]
+    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN'][0]
     env, config, outdir, logger = init('Training/configs/config_random_cartpole.yaml', mode)
 
     torch.manual_seed(config['seed'])
@@ -42,6 +42,7 @@ if __name__ == '__main__':
     itest = 0
     reward = 0
     done = False
+    loss = -1
     for i in range(episode_count):
         checkConfUpdate(outdir, config)
 
@@ -112,7 +113,7 @@ if __name__ == '__main__':
             if agent.time_to_learn():
                 loss = agent.learn(done)
 
-            if done:
+            if done and loss > 0:
                 print(str(i) + " rsum=" + str(rsum) + ", " + str(j) + " actions " + f' loss: {loss}')
                 logger.direct_write("reward", rsum, i)
                 logger.direct_write('loss', loss, i)

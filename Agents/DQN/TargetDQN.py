@@ -22,11 +22,10 @@ class TargetDQN(DQN):
         done    = last_transition['done']
 
         qhat = self.Q(obs)
-
         with torch.no_grad():
             qhat_target = self.target_net(new_obs)
-            r = reward + self.discount * torch.max(qhat_target) if not done else torch.Tensor([reward])
 
+        r = reward + self.discount * torch.max(qhat_target) if not done else torch.Tensor([reward])
         loss = self.loss(r, qhat[0, action])
         loss.backward()
 
