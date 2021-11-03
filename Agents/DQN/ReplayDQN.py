@@ -17,29 +17,26 @@ class ReplayDQN(DQN):
             return super().time_to_learn()
 
     def learn(self, episode_done):
-        batches = self.memory.sample_batch(n_batch=self.memory_size // self.batch_size, batch_size=self.batch_size)
-        b_obs = batches['obs']
-        b_action = batches['action']
-        b_reward = batches['reward']
-        b_next = batches['new_obs']
-        b_done = batches['done']
+        batches     = self.memory.sample_batch(batch_size=self.batch_size)
+        b_obs       = batches['obs']
+        b_action    = batches['action']
+        b_reward    = batches['reward'].float()
+        b_next      = batches['new_obs']
+        b_done      = batches['done']
 
-        train_loss = 0
-        for i in range(self.memory_size // self.batch_size):
-            obs, action, reward, new_obs, done = b_obs[i], b_action[i], b_reward[i].float(), b_next[i], b_done[i]
+        qhat = self.Q(b_obs)
+        qvalues = torch.gather(qhat, -1, b_action.reshape(-1, 1))
+        with torch.no_grad():
+            next_qhat = self.Q(b_next)
+            r = b_reward + self.discount * torch.max(next_qhat, dim=-1).values * (1 - b_done.float())
 
-            qhat = self.Q(obs)
-            next_qhat = self.Q(new_obs)
+        loss = self.loss(qvalues, r)
+        loss.backward()
 
-            r = reward + self.discount * torch.max(next_qhat, dim=-1).values * (1 - done.float())
-            loss = self.loss(r, torch.gather(qhat, -1, action.reshape(-1, 1).long()))
-            loss.backward()
-            train_loss += loss.item()
-
-            self.optim.step()
-            self.optim.zero_grad()
+        self.optim.step()
+        self.optim.zero_grad()
 
         if episode_done:
             self.explo *= self.decay
 
-        return train_loss / (self.memory_size // self.batch_size)
+        return loss.item()
