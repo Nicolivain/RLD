@@ -102,7 +102,7 @@ if __name__ == '__main__':
             transition = {
                 'obs'       : ob,
                 'action'    : action,
-                'reward'    : reward,
+                'reward'    : reward/100,  # reward rescaling for NN
                 'new_obs'   : torch.from_numpy(new_ob),
                 'done'      : done,
                 'it'        : j
