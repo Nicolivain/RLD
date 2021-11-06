@@ -37,19 +37,13 @@ class A2C(Agent):
     def act(self, obs):
         with torch.no_grad():
             values = self.policy_net(obs).reshape(-1)
-        if self.test:
-            return pick_greedy(values.numpy())
-        else:
-            return pick_sample(values)
+        return pick_sample(values)
 
     def time_to_learn(self):
         if self.memory.nentities < self.memory_size or self.test:
             return False
         else:
-            self.n_events += 1
-            if self.n_events % self.freq_optim == 0:
-                return True
-            return False
+            return True
 
     def learn(self, done):
 

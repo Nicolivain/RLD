@@ -29,7 +29,7 @@ if __name__ == '__main__':
     episode_count = config["nbEpisodes"]
 
     agent = {
-             'A2C' : A2C(env, config, layers=[30, 30], batch_size=1000)
+             'A2C' : A2C(env, config, layers=[30, 30], batch_size=1000, memory_size=1000)
              }[mode]
 
     rsum = 0
