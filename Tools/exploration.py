@@ -1,5 +1,6 @@
 import numpy as np
 from numpy import random
+from torch.distributions import Categorical
 
 
 def pick_greedy(values):
@@ -16,3 +17,8 @@ def pick_epsilon_greedy(values, epsilon):
 
 def pick_ucb(values):
     pass  # TODO
+
+
+def pick_sample(values):
+    assert len(values.shape) == 1, 'Values must be unidimensional'
+    return Categorical(values).sample().item()

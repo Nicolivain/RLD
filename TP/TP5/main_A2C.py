@@ -29,7 +29,7 @@ if __name__ == '__main__':
     episode_count = config["nbEpisodes"]
 
     agent = {
-             'A2C' : A2C(env, config, layers=[200])
+             'A2C' : A2C(env, config, layers=[30, 30], batch_size=1000)
              }[mode]
 
     rsum = 0
@@ -99,19 +99,18 @@ if __name__ == '__main__':
                 'it': j
             }
             agent.store(transition)
-            agent.memorize()
             rsum += reward
 
-            if agent.time_to_learn:
+            if agent.time_to_learn():
                 loss = agent.learn(done)
-            if done:
+            if done and loss > 0:
                 print(str(i) + " rsum=" + str(rsum) + ", " + str(j) + " actions " + f' loss: {loss}')
-                if loss > 0:
-                    logger.direct_write("reward", rsum, i)
+                logger.direct_write("reward", rsum, i)
+                logger.direct_write('loss', loss, i)
                 agent.nbEvents = 0
                 mean += rsum
                 rsum = 0
-
+            if done:
                 break
 
     env.close()
