@@ -29,7 +29,7 @@ if __name__ == '__main__':
     episode_count = config["nbEpisodes"]
 
     agent = {
-             'A2C' : A2C(env, config, layers=[30, 30], batch_size=1000, memory_size=1000)
+             'A2C' : A2C(env, config, layers=[30, 30], batch_size=100, memory_size=100)
              }[mode]
 
     rsum = 0
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     itest = 0
     reward = 0
     done = False
-    loss = -1
+    loss = None
     for i in range(episode_count):
         checkConfUpdate(outdir, config)
 
@@ -93,8 +93,8 @@ if __name__ == '__main__':
             transition = {
                 'obs': ob,
                 'action': action,
-                'new_state': torch.from_numpy(new_ob),
-                'reward': reward,
+                'new_obs': torch.from_numpy(new_ob),
+                'reward': reward/100,   # rescale factor for NN
                 'done': done,
                 'it': j
             }
@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
             if agent.time_to_learn():
                 loss = agent.learn(done)
-            if done and loss > 0:
+            if done and loss is not None:
                 print(str(i) + " rsum=" + str(rsum) + ", " + str(j) + " actions " + f' loss: {loss}')
                 logger.direct_write("reward", rsum, i)
                 logger.direct_write('loss', loss, i)

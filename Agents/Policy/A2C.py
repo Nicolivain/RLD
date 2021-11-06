@@ -5,6 +5,20 @@ from Structure.Memory import Memory
 import numpy as np
 import numpy.random as random
 from Tools.exploration import *
+import torch.nn.functional as F
+
+
+class ACNet(torch.nn.Module):
+    def __init__(self, in_size, action_space_size, layers, final_activation=None, activation=torch.tanh, dropout=0):
+        super().__init__()
+        self.policy_net = NN(in_size, action_space_size, layers=layers, finalActivation=final_activation, activation=activation, dropout=dropout)
+        self.critic_net = NN(in_size, 1, layers=layers, finalActivation=None, activation=activation, dropout=dropout)
+
+    def policy(self, x):
+        return self.policy_net(x)
+
+    def critic(self, x):
+        return self.critic_net(x)
 
 
 class A2C(Agent):
@@ -14,29 +28,23 @@ class A2C(Agent):
         self.loss = torch.nn.SmoothL1Loss() if loss == 'smoothL1' else torch.nn.MSELoss()
         self.lr = opt.learningRate
 
-        self.policy_net = NN(self.featureExtractor.outSize, self.action_space.n, layers=layers, finalActivation=torch.nn.Softmax())
-        self.critic_net = NN(self.featureExtractor.outSize, 1, layers=layers, finalActivation=torch.nn.Sigmoid())
-        self.optim_critic = torch.optim.Adam(self.critic_net.parameters(), lr=self.lr)
-        self.optim_policy = torch.optim.Adam(self.policy_net.parameters(), lr=self.lr)
+        self.model = ACNet(self.featureExtractor.outSize, self.action_space.n, layers, final_activation=torch.nn.Softmax())
+        self.optim = torch.optim.Adam(params=self.model.parameters(), lr=self.lr)
 
         self.memory = Memory(mem_size=memory_size)
         self.batch_size = batch_size
         self.memory_size = memory_size
 
         self.lastTransition = {}
-        self.freq_optim = self.config.freqOptim
         self.n_events = 0
 
     def store(self, transition):
         if not self.test:
             self.memory.store(transition)
 
-    def memorize(self):
-        self.memory.store(self.lastTransition)
-
     def act(self, obs):
         with torch.no_grad():
-            values = self.policy_net(obs).reshape(-1)
+            values = self.model.policy(obs).reshape(-1)
         return pick_sample(values)
 
     def time_to_learn(self):
@@ -52,13 +60,13 @@ class A2C(Agent):
         b_obs    = batches['obs']
         b_action = batches['action']
         b_reward = batches['reward']
-        b_new    = batches['new_state']
+        b_new    = batches['new_obs']
         b_done   = batches['done']
 
-        pi = self.policy_net(b_obs)
-        critic = self.critic_net(b_obs).squeeze()
+        pi = self.model.policy(b_obs)
+        critic = self.model.critic(b_obs).squeeze()
         with torch.no_grad():
-            next_critic = self.critic_net(b_new)
+            next_critic = self.model.critic(b_new)
             td0 = (b_reward + self.discount * next_critic.squeeze() * (~b_done)).float()
             advantage = td0 - critic
 
@@ -66,16 +74,13 @@ class A2C(Agent):
         action_pi = pi.gather(-1, b_action.reshape(-1, 1).long()).squeeze()
         j = -torch.mean(torch.log(action_pi) * advantage)
 
+        self.optim.zero_grad()
         loss.backward()
-        self.optim_critic.step()
-        self.optim_critic.zero_grad()
-
         j.backward()
-        self.optim_policy.step()
-        self.optim_policy.zero_grad()
+        self.optim.step()
 
         # reset memory for next training
         del self.memory
         self.memory = Memory(mem_size=self.memory_size)
 
-        return j.item()
+        return loss.item()
