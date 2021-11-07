@@ -1,6 +1,7 @@
 import matplotlib
 
-from Agents.Policy.A2C import A2C
+from Agents.Policy.ClippedPPO import ClippedPPO
+from Agents.Policy.PPO import PPO
 from Tools.core import *
 from Tools.utils import *
 
@@ -9,7 +10,7 @@ matplotlib.use("Qt5agg")
 
 if __name__ == '__main__':
 
-    mode = ['A2C'][0]
+    mode = ['PPO', 'ClippedPPO'][0]
     env, config, outdir, logger = init('Training/configs/config_random_cartpole.yaml', mode)
 
     torch.manual_seed(config['seed'])
@@ -21,7 +22,8 @@ if __name__ == '__main__':
     episode_count = config["nbEpisodes"]
 
     agent = {
-             'A2C' : A2C(env, config, layers=[30, 30], batch_size=100, memory_size=100)
+             'PPO'          : PPO(env, config),
+             'ClippedPPO'   : ClippedPPO(env, config)
              }[mode]
 
     rsum = 0
