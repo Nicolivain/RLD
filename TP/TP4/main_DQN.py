@@ -31,7 +31,7 @@ if __name__ == '__main__':
     episode_count = config["nbEpisodes"]
 
     agent = {'DQN'          : DQN(env, config, layers=[200]),
-             'ReplayDQN'    : ReplayDQN(env, config, layers=[200], memory_size=3000, batch_size=64),
+             'ReplayDQN'    : ReplayDQN(env, config, layers=[24, 24], memory_size=3000, batch_size=64),
              'TargetDQN'    : TargetDQN(env, config, layers=[24, 24], update_target=500),
              'minDQN'       : MinDQN(env, config, layers=[24, 24], memory_size=3000, batch_size=64, update_target=500)
              }[mode]
