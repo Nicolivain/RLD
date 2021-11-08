@@ -1,7 +1,7 @@
 import matplotlib
 
 from Agents.Policy.ClippedPPO import ClippedPPO
-from Agents.Policy.PPO import PPO
+from Agents.Policy.PPO import AdaptativePPO
 from Tools.core import *
 from Tools.utils import *
 
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     episode_count = config["nbEpisodes"]
 
     agent = {
-             'PPO'          : PPO(env, config),
+             'PPO'          : AdaptativePPO(env, config, layers=[30, 30], k=10, memory_size=100, batch_size=100),
              'ClippedPPO'   : ClippedPPO(env, config)
              }[mode]
 
