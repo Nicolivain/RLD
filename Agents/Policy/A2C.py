@@ -1,11 +1,9 @@
-from Agents.Agent import Agent
 import torch
-from Tools.core import NN
+
+from Agents.Agent import Agent
 from Structure.Memory import Memory
-import numpy as np
-import numpy.random as random
+from Tools.core import NN
 from Tools.exploration import *
-import torch.nn.functional as F
 
 
 class ACNet(torch.nn.Module):
@@ -35,7 +33,6 @@ class A2C(Agent):
         self.batch_size = batch_size
         self.memory_size = memory_size
 
-        self.lastTransition = {}
         self.n_events = 0
 
     def store(self, transition):
