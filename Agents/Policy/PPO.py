@@ -1,8 +1,8 @@
 import torch
-from scipy.stats import entropy
 
 from Agents.Policy.A2C import A2C
 from Structure.Memory import Memory
+from Tools.distributions import batched_dkl
 
 
 class AdaptativePPO(A2C):
@@ -11,19 +11,21 @@ class AdaptativePPO(A2C):
         self.beta = 1
         self.delta = delta
         self.k = k
+        self.min_beta = 1e-5
 
     def _update_betas(self, obs, old_pi):
         # TODO: verify this works as intended
         new_pi = self.model.policy(obs)
-        dkl = 0
-        for p, q in zip(old_pi, new_pi):
-            dkl += entropy(p, qk=q)
-        dkl /= len(old_pi)
+        dkl = batched_dkl(new_pi, old_pi)
 
         if dkl >= 1.5 * self.delta:
             self.beta *= 2
         elif dkl <= self.delta / 1.5:
             self.beta /= 2
+
+        # clipping the value in case we go to low
+        if self.beta < self.min_beta:
+            self.beta = self.min_beta
 
     def _update_value_network(self, obs, reward, next_obs, done):
         with torch.no_grad():
@@ -35,12 +37,11 @@ class AdaptativePPO(A2C):
         return loss.item()
 
     def _compute_objective(self, advantage, pi, new_pi, new_action_pi, action_pi):
-        # TODO: verify this works
         # compute l_theta_theta_k
         advantage_loss = torch.mean(advantage * new_action_pi / action_pi)
 
         # compute DKL_theta/theta_k
-        dkl = entropy(pi, qk=new_pi)
+        dkl = batched_dkl(new_pi, pi)
 
         # computing the adjusted loss
         return advantage_loss - self.beta * dkl
