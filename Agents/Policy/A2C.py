@@ -26,7 +26,7 @@ class A2C(Agent):
         self.loss = torch.nn.SmoothL1Loss() if loss == 'smoothL1' else torch.nn.MSELoss()
         self.lr = opt.learningRate
 
-        self.model = ACNet(self.featureExtractor.outSize, self.action_space.n, layers, final_activation=torch.nn.Softmax())
+        self.model = ACNet(self.featureExtractor.outSize, self.action_space.n, layers, final_activation=torch.nn.Softmax(dim=-1))
         self.optim = torch.optim.Adam(params=self.model.parameters(), lr=self.lr)
 
         self.memory = Memory(mem_size=memory_size)

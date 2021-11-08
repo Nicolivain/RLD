@@ -22,7 +22,7 @@ if __name__ == '__main__':
     episode_count = config["nbEpisodes"]
 
     agent = {
-             'PPO'          : AdaptativePPO(env, config, layers=[250], k=3, memory_size=500, batch_size=500),
+             'PPO'          : AdaptativePPO(env, config, layers=[256], k=3, memory_size=100, batch_size=100),
              'ClippedPPO'   : ClippedPPO(env, config, layers=[30, 30], k=10, memory_size=100, batch_size=100)
              }[mode]
 
