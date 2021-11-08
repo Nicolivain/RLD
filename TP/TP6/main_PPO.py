@@ -22,8 +22,8 @@ if __name__ == '__main__':
     episode_count = config["nbEpisodes"]
 
     agent = {
-             'PPO'          : AdaptativePPO(env, config, layers=[30, 30], k=10, memory_size=100, batch_size=100),
-             'ClippedPPO'   : ClippedPPO(env, config)
+             'PPO'          : AdaptativePPO(env, config, layers=[250], k=3, memory_size=500, batch_size=500),
+             'ClippedPPO'   : ClippedPPO(env, config, layers=[30, 30], k=10, memory_size=100, batch_size=100)
              }[mode]
 
     rsum = 0
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     itest = 0
     reward = 0
     done = False
-    loss = None
+    policy_loss, value_loss = None, None
     for i in range(episode_count):
         checkConfUpdate(outdir, config)
 
@@ -96,11 +96,15 @@ if __name__ == '__main__':
             rsum += reward
 
             if agent.time_to_learn():
-                loss = agent.learn(done)
-            if done and loss is not None:
-                print(str(i) + " rsum=" + str(rsum) + ", " + str(j) + " actions " + f' loss: {loss}')
+                policy_loss, value_loss = agent.learn(done)
+            if done and policy_loss is not None:
+                print(
+                    'Episode {:5d} Reward: {:3.1f} #Action: {:4d} Policy Loss: {:1.6f} Value Loss: {:1.6f} Beta {:1.6f}'.format(
+                        i, rsum, j, policy_loss, value_loss, agent.beta))
                 logger.direct_write("reward", rsum, i)
-                logger.direct_write('loss', loss, i)
+                logger.direct_write('average policy loss', policy_loss, i)
+                logger.direct_write('value loss', value_loss, i)
+                logger.direct_write('beta', agent.beta, i)
                 agent.nbEvents = 0
                 mean += rsum
                 rsum = 0

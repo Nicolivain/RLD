@@ -5,9 +5,9 @@ from Structure.Memory import Memory
 
 
 class AdaptativePPO(A2C):
-    def __init__(self, env, opt, layers, k, delta=1.5, loss='smoothL1', memory_size=1000, batch_size=1000):
+    def __init__(self, env, opt, layers, k, delta=1e-3, loss='smoothL1', memory_size=1000, batch_size=1000):
         super(AdaptativePPO, self).__init__(env, opt, layers, loss, batch_size, memory_size)
-        self.beta = 0
+        self.beta = 1
         self.delta = delta
         self.k = k
 
@@ -25,8 +25,10 @@ class AdaptativePPO(A2C):
         elif dkl <= self.delta / 1.5:
             self.beta /= 2
 
-    def _update_value_network(self, td, values):
-        loss = self.loss(td, values)
+    def _update_value_network(self, obs, reward, next_obs, done):
+        with torch.no_grad():
+            td0 = (reward + self.discount * self.model.critic(next_obs).squeeze() * (~done)).float()
+        loss = self.loss(td0, self.model.critic(obs).squeeze())
         loss.backward()
         self.optim.step()
         self.optim.zero_grad()
@@ -55,16 +57,17 @@ class AdaptativePPO(A2C):
         b_done = batches['done']
 
         pi = self.model.policy(b_obs)
-        critic = self.model.critic(b_obs).squeeze()
+        values = self.model.critic(b_obs).squeeze()
         with torch.no_grad():
             # compute td0
             next_critic = self.model.critic(b_new)
             td0 = (b_reward + self.discount * next_critic.squeeze() * (~b_done)).float()
 
             # compute advantage and action_probabilities
-            advantage = td0 - critic
+            advantage = td0 - values
             action_pi = pi.gather(-1, b_action.reshape(-1, 1).long()).squeeze()
 
+        avg_policy_loss = 0
         for i in range(self.k):
             # get the new action probabilities
             new_pi = self.model.policy(b_obs)
@@ -72,6 +75,7 @@ class AdaptativePPO(A2C):
 
             # compute the objective with the new probabilities
             objective = self._compute_objective(advantage, new_action_pi, action_pi)
+            avg_policy_loss += objective.item()
 
             # optimize
             objective.backward()
@@ -82,10 +86,10 @@ class AdaptativePPO(A2C):
         self._update_betas(b_obs, b_action, action_pi)
 
         # updating value network just like in A2C
-        loss = self._update_value_network(td0, critic)
+        loss = self._update_value_network(b_obs, b_reward, b_new, b_done)
 
         #  reset memory
         del self.memory
         self.memory = Memory(mem_size=self.memory_size)
 
-        return
+        return avg_policy_loss/self.k, loss
