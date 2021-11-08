@@ -11,7 +11,8 @@ matplotlib.use("Qt5agg")
 # matplotlib.use("TkAgg")
 
 if __name__ == '__main__':
-    # TODO: verify this works and check HP
+
+    # TODO Hyperparameter search
     mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN'][2]
     env, config, outdir, logger = init('Training/configs/config_random_cartpole.yaml', mode)
 

@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 # classe utile pour ajouter du bruit (utile par exemple pour DDPG)
@@ -291,15 +290,15 @@ class convMDP(nn.Module):
 # Classe basique de NN générique
 # Accepte une liste de tailles de couches pour la variables layers (permet de définir la structure)
 class NN(nn.Module):
-    def __init__(self, inSize, outSize, layers=[], finalActivation=None, activation=torch.tanh, dropout=0.0):
+    def __init__(self, in_size, out_size, layers=[], final_activation=None, activation=torch.relu, dropout=0.0):
         super(NN, self).__init__()
         self.layers = nn.ModuleList([])
         for x in layers:
-            self.layers.append(nn.Linear(inSize, x))
-            inSize = x
-        self.layers.append(nn.Linear(inSize, outSize))
+            self.layers.append(nn.Linear(in_size, x))
+            in_size = x
+        self.layers.append(nn.Linear(in_size, out_size))
         self.activation = activation
-        self.finalActivation = finalActivation
+        self.finalActivation = final_activation
         self.dropout = None
         if dropout > 0:
             self.dropout = torch.nn.Dropout(dropout)
@@ -317,6 +316,6 @@ class NN(nn.Module):
             x = self.layers[i](x)
 
         if self.finalActivation is not None:
-            x=self.finalActivation(x)
+            x = self.finalActivation(x)
 
         return x

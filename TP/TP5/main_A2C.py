@@ -8,7 +8,7 @@ matplotlib.use("Qt5agg")
 # matplotlib.use("TkAgg")
 
 if __name__ == '__main__':
-    # TODO check this is ok
+    # TODO parameters/network stuff
     mode = ['A2C'][0]
     env, config, outdir, logger = init('Training/configs/config_random_cartpole.yaml', mode)
 
