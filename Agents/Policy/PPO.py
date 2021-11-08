@@ -1,4 +1,5 @@
 import torch
+from scipy.stats import entropy
 
 from Agents.Policy.A2C import A2C
 from Structure.Memory import Memory
@@ -11,14 +12,13 @@ class AdaptativePPO(A2C):
         self.delta = delta
         self.k = k
 
-    def _update_betas(self, obs, actions, old_action_pi):
+    def _update_betas(self, obs, old_pi):
+        # TODO: verify this works as intended
         new_pi = self.model.policy(obs)
-        new_action_pi = new_pi.gather(-1, actions.reshape(-1, 1).long()).squeeze()
-
-        dkl = torch.distributions.kl_divergence(
-            torch.distributions.Categorical(old_action_pi),
-            torch.distributions.Categorical(new_action_pi)
-        ).mean()
+        dkl = 0
+        for p, q in zip(old_pi, new_pi):
+            dkl += entropy(p, qk=q)
+        dkl /= len(old_pi)
 
         if dkl >= 1.5 * self.delta:
             self.beta *= 2
@@ -34,15 +34,13 @@ class AdaptativePPO(A2C):
         self.optim.zero_grad()
         return loss.item()
 
-    def _compute_objective(self, advantage, new_action_pi, action_pi):
+    def _compute_objective(self, advantage, pi, new_pi, new_action_pi, action_pi):
+        # TODO: verify this works
         # compute l_theta_theta_k
         advantage_loss = torch.mean(advantage * new_action_pi / action_pi)
 
         # compute DKL_theta/theta_k
-        dkl = torch.distributions.kl_divergence(
-            torch.distributions.Categorical(action_pi),
-            torch.distributions.Categorical(new_action_pi)
-        ).mean()
+        dkl = entropy(pi, qk=new_pi)
 
         # computing the adjusted loss
         return advantage_loss - self.beta * dkl
@@ -74,7 +72,7 @@ class AdaptativePPO(A2C):
             new_action_pi = new_pi.gather(-1, b_action.reshape(-1, 1).long()).squeeze()
 
             # compute the objective with the new probabilities
-            objective = self._compute_objective(advantage, new_action_pi, action_pi)
+            objective = self._compute_objective(advantage, pi, new_pi, new_action_pi, action_pi)
             avg_policy_loss += objective.item()
 
             # optimize
@@ -83,7 +81,7 @@ class AdaptativePPO(A2C):
             self.optim.zero_grad()
 
         # Updating betas
-        self._update_betas(b_obs, b_action, action_pi)
+        self._update_betas(b_obs, pi)
 
         # updating value network just like in A2C
         loss = self._update_value_network(b_obs, b_reward, b_new, b_done)

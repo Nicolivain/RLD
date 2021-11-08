@@ -1,8 +1,9 @@
-from Tools.core import NN
-from Agents.Agent import Agent
-from Tools.exploration import pick_greedy, pick_epsilon_greedy, pick_ucb
-from Structure.Memory import Memory
 import torch
+
+from Agents.Agent import Agent
+from Structure.Memory import Memory
+from Tools.core import NN
+from Tools.exploration import pick_greedy, pick_epsilon_greedy, pick_ucb
 
 
 class DQN(Agent):
@@ -10,8 +11,9 @@ class DQN(Agent):
     def __init__(self, env, config, layers, loss='smoothL1', memory_size=1, batch_size=100):
         super().__init__(env, config)
 
+        # TODO: test one layer
         self.featureExtractor = config.featExtractor(env)
-        self.Q                = NN(self.featureExtractor.outSize, self.action_space.n, layers=layers, finalActivation=None)
+        self.Q                = NN(self.featureExtractor.outSize, self.action_space.n, layers=layers, finalActivation=torch.nn.ReLU(), activation=torch.nn.ReLU())
         self.loss             = torch.nn.SmoothL1Loss() if loss == 'smoothL1' else torch.nn.MSELoss()
         self.optim            = torch.optim.Adam(self.Q.parameters(), lr=self.alpha)
         self.memory           = Memory(memory_size)

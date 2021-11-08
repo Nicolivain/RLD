@@ -7,7 +7,8 @@ from Tools.exploration import *
 
 
 class ACNet(torch.nn.Module):
-    def __init__(self, in_size, action_space_size, layers, final_activation=None, activation=torch.tanh, dropout=0):
+    # TODO test simpler architecture ie One layer
+    def __init__(self, in_size, action_space_size, layers, final_activation=None, activation=torch.relu, dropout=0):
         super().__init__()
         self.policy_net = NN(in_size, action_space_size, layers=layers, finalActivation=final_activation, activation=activation, dropout=dropout)
         self.critic_net = NN(in_size, 1, layers=layers, finalActivation=None, activation=activation, dropout=dropout)

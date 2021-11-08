@@ -11,8 +11,8 @@ matplotlib.use("Qt5agg")
 # matplotlib.use("TkAgg")
 
 if __name__ == '__main__':
-
-    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN'][3]
+    # TODO: verify this works and check HP
+    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN'][2]
     env, config, outdir, logger = init('Training/configs/config_random_cartpole.yaml', mode)
 
     torch.manual_seed(config['seed'])
@@ -96,7 +96,7 @@ if __name__ == '__main__':
             transition = {
                 'obs'       : ob,
                 'action'    : action,
-                'reward'    : reward/100,  # reward rescaling for NN
+                'reward'    : reward,
                 'new_obs'   : torch.from_numpy(new_ob),
                 'done'      : done,
                 'it'        : j
