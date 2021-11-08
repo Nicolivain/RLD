@@ -13,12 +13,6 @@ Course website: https://dac.lip6.fr/master/rld-2021-2022/
 
 ### Environnement:
 Grid World, Cartpole, Lunar Lander
-
-### Lessons Learnt:
-The importance of unit testing to save time debugging.
-
-Standardize experiments and a clean logger.
-
     
 ### Ressources: 
 - Minimal RL from seungeunrho: https://github.com/seungeunrho/minimalRL/
