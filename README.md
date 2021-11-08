@@ -16,6 +16,7 @@ Grid World, Cartpole, Lunar Lander
 
 ### Lessons Learnt:
 The importance of unit testing to save time debugging.
+
 Standardize experiments and a clean logger.
 
     
