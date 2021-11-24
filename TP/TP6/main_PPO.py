@@ -22,7 +22,7 @@ if __name__ == '__main__':
     episode_count = config["nbEpisodes"]
 
     agent = {
-             'PPO'          : AdaptativePPO(env, config, layers=[30, 30], k=1, memory_size=100, batch_size=100),
+             'PPO'          : AdaptativePPO(env, config, layers=[256], k=10, memory_size=100, batch_size=100),
              'ClippedPPO'   : ClippedPPO(env, config, layers=[30, 30], k=10, memory_size=100, batch_size=100)
              }[mode]
 
@@ -88,7 +88,7 @@ if __name__ == '__main__':
                 'obs': ob,
                 'action': action,
                 'new_obs': torch.from_numpy(new_ob),
-                'reward': reward/100,   # rescale factor for NN
+                'reward': reward,   # rescale factor for NN
                 'done': done,
                 'it': j
             }

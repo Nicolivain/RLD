@@ -44,7 +44,7 @@ class AdaptativePPO(A2C):
         dkl = batched_dkl(new_pi, pi)
 
         # computing the adjusted loss
-        return advantage_loss - self.beta * dkl
+        return -(advantage_loss - self.beta * dkl)
 
     def learn(self, done):
         batches = self.memory.sample_batch(batch_size=self.batch_size)
@@ -55,9 +55,11 @@ class AdaptativePPO(A2C):
         b_new = batches['new_obs']
         b_done = batches['done']
 
-        pi = self.model.policy(b_obs)
-        values = self.model.critic(b_obs).squeeze()
         with torch.no_grad():
+            # compute policy and critic
+            pi = self.model.policy(b_obs)
+            values = self.model.critic(b_obs).squeeze()
+
             # compute td0
             next_critic = self.model.critic(b_new)
             td0 = (b_reward + self.discount * next_critic.squeeze() * (~b_done)).float()
