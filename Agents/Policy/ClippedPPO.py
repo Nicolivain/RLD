@@ -16,4 +16,3 @@ class ClippedPPO(AdaptativePPO):
         advantage_loss = -torch.mean(clipped)
 
         return advantage_loss
-
