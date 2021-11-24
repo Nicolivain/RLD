@@ -6,12 +6,15 @@ from Tools.distributions import batched_dkl
 
 
 class AdaptativePPO(A2C):
-    def __init__(self, env, opt, layers, k, delta=1e-3, loss='smoothL1', memory_size=1000, batch_size=1000):
+    def __init__(self, env, opt, layers, k, delta=1e-3, loss='smoothL1', memory_size=1000, batch_size=1000, use_dkl=True, reversed_dkl=False):
         super(AdaptativePPO, self).__init__(env, opt, layers, loss, batch_size, memory_size)
         self.beta = 1
         self.delta = delta
         self.k = k
         self.min_beta = 1e-5
+
+        self.dkl = use_dkl
+        self.reversed = reversed_dkl
 
     def _update_betas(self, obs, old_pi):
         new_pi = self.model.policy(obs)
@@ -40,7 +43,13 @@ class AdaptativePPO(A2C):
         advantage_loss = torch.mean(advantage * new_action_pi / action_pi)
 
         # compute DKL_theta/theta_k
-        dkl = batched_dkl(new_pi, pi)
+        dkl = 0
+        if self.dkl:
+            if self.reversed:
+                # if we want to experiment with the reversed dkl
+                dkl = batched_dkl(pi, new_pi)
+            else:
+                dkl = batched_dkl(new_pi, pi)
 
         # computing the adjusted loss
         return -(advantage_loss - self.beta * dkl)
