@@ -13,7 +13,7 @@ class DQN(Agent):
 
         # TODO: test one layer
         self.featureExtractor = config.featExtractor(env)
-        self.Q                = NN(self.featureExtractor.outSize, self.action_space.n, layers=layers, finalActivation=torch.nn.ReLU(), activation=torch.nn.ReLU())
+        self.Q                = NN(self.featureExtractor.outSize, self.action_space.n, layers=layers, final_activation=torch.nn.ReLU(), activation=torch.nn.ReLU())
         self.loss             = torch.nn.SmoothL1Loss() if loss == 'smoothL1' else torch.nn.MSELoss()
         self.optim            = torch.optim.Adam(self.Q.parameters(), lr=self.alpha)
         self.memory           = Memory(memory_size)

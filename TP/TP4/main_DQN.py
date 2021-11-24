@@ -1,6 +1,7 @@
 import matplotlib
 
 from Agents.DQN.DQN import DQN
+from Agents.DQN.DuelingDQN import DuelingDQN
 from Agents.DQN.ReplayDQN import ReplayDQN
 from Agents.DQN.TargetDQN import TargetDQN
 from Agents.DQN.minDQN import MinDQN
@@ -12,8 +13,7 @@ matplotlib.use("Qt5agg")
 
 if __name__ == '__main__':
 
-    # TODO Hyperparameter search
-    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN'][2]
+    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN', 'DuelingDQN'][4]
     env, config, outdir, logger = init('Training/configs/config_random_cartpole.yaml', mode)
 
     torch.manual_seed(config['seed'])
@@ -28,7 +28,8 @@ if __name__ == '__main__':
     agent = {'DQN'          : DQN(env, config, layers=[200]),
              'ReplayDQN'    : ReplayDQN(env, config, layers=[24, 24], memory_size=3000, batch_size=64),
              'TargetDQN'    : TargetDQN(env, config, layers=[24, 24], update_target=500),
-             'minDQN'       : MinDQN(env, config, layers=[24, 24], memory_size=3000, batch_size=64, update_target=500)
+             'minDQN'       : MinDQN(env, config, layers=[24, 24], memory_size=3000, batch_size=64, update_target=500),
+             'DuelingDQN'   : DuelingDQN(env, config, layers=[24, 24], memory_size=3000, batch_size=64, update_target=500)
              }[mode]
 
     rsum = 0
