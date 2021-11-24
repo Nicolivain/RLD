@@ -14,7 +14,6 @@ class AdaptativePPO(A2C):
         self.min_beta = 1e-5
 
     def _update_betas(self, obs, old_pi):
-        # TODO: verify this works as intended
         new_pi = self.model.policy(obs)
         dkl = batched_dkl(new_pi, old_pi)
 

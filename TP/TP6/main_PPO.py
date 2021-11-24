@@ -88,7 +88,7 @@ if __name__ == '__main__':
                 'obs': ob,
                 'action': action,
                 'new_obs': torch.from_numpy(new_ob),
-                'reward': reward,   # rescale factor for NN
+                'reward': reward/100,   # rescale factor for NN
                 'done': done,
                 'it': j
             }
