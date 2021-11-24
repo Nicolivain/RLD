@@ -10,7 +10,7 @@ matplotlib.use("Qt5agg")
 
 if __name__ == '__main__':
 
-    mode = ['PPO', 'ClippedPPO'][0]
+    mode = ['PPO', 'ClippedPPO', 'PPO_noDKL'][1]
     env, config, outdir, logger = init('Training/configs/config_random_cartpole.yaml', mode)
 
     torch.manual_seed(config['seed'])
@@ -23,7 +23,8 @@ if __name__ == '__main__':
 
     agent = {
              'PPO'          : AdaptativePPO(env, config, layers=[256], k=10, memory_size=100, batch_size=100, use_dkl=True, reversed_dkl=False),
-             'ClippedPPO'   : ClippedPPO(env, config, layers=[30, 30], k=10, memory_size=100, batch_size=100)
+             'ClippedPPO'   : ClippedPPO(env, config, layers=[256], k=10, memory_size=100, batch_size=100),
+             'PPO_noDKL'    : AdaptativePPO(env, config, layers=[256], k=10, memory_size=100, batch_size=100, use_dkl=False)
              }[mode]
 
     rsum = 0
