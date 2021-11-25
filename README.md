@@ -7,12 +7,13 @@ Course website: https://dac.lip6.fr/master/rld-2021-2022/
 - UCB and LinUCB Bandits
 - Policy and Value Iteration 
 - QLearning, SARSA, DynaQ
-- Deep Q Learning (minDQN)
+- Deep Q Learning (minDQN), DuelingDQN
 - Actor Critic A2C
 - Trusted Region Actor Critic PPO and Clipped PPO
+- DDPG (in progress)
 
 ### Environnement:
-Grid World, Cartpole, Lunar Lander
+Grid World, Cartpole, Lunar Lander, Pendulum
     
 ### Ressources: 
 - Minimal RL from seungeunrho: https://github.com/seungeunrho/minimalRL/
