@@ -21,7 +21,7 @@ if __name__ == '__main__':
     episode_count = config["nbEpisodes"]
 
     agent = {
-             'DDPG'          : DDPG(env, config, batch_per_learn=3, layers=[30], memory_size=10000, batch_size=1024),
+             'DDPG'          : DDPG(env, config, batch_per_learn=3, layers=[20, 20], memory_size=10000, batch_size=1024),
              }[mode]
 
     rsum = 0
@@ -86,7 +86,7 @@ if __name__ == '__main__':
                 'obs': ob,
                 'action': action,
                 'new_obs': torch.from_numpy(new_ob),
-                'reward': reward    ,   # rescale factor for NN
+                'reward': reward/100    ,   # rescale factor for NN
                 'done': done,
                 'it': j
             }

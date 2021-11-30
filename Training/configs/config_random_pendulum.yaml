@@ -14,6 +14,6 @@ exploMode: 0                                                                    
 explo: 0.1                                                                            # coefficient d'exploration initial
 decay: 0.99999                                                                         # a la fin de chaque trajectoire, le coefficient d'explo est multiplié par ce facteur
 gamma: 0.99                                                                          # Facteur de discount
-p_learningRate: 0.0001
-q_learningRate: 0.001
+p_learningRate: 0.00005
+q_learningRate: 0.0005
 rho: 0.995

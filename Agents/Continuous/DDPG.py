@@ -11,8 +11,8 @@ from Tools.core import Orn_Uhlen
 class QPolicyNet:
     def __init__(self, in_size, action_space_size, layers, final_activation=None, activation=torch.relu, dropout=0):
 
-        self.q_net      = NN(in_size + action_space_size, 1, layers=layers, final_activation=final_activation, activation=activation, dropout=dropout)
-        self.policy_net = NN(in_size, action_space_size, layers=layers, final_activation=None, activation=activation, dropout=dropout)
+        self.q_net      = NN(in_size + action_space_size, 1, layers=layers, final_activation=None, activation=activation, dropout=dropout)
+        self.policy_net = NN(in_size, action_space_size, layers=layers, final_activation=final_activation, activation=activation, dropout=dropout)
 
     def policy(self, x):
         return self.policy_net(x)
@@ -67,7 +67,7 @@ class DDPG(Agent):
 
     def time_to_learn(self):
         self.n_events += 1
-        if self.n_events % self.freq_optim != 0 or self.memory.nentities < self.memory_size or self.test:
+        if self.n_events % self.freq_optim != 0 or self.test:
             return False
         else:
             return True
@@ -105,7 +105,7 @@ class DDPG(Agent):
         # on commence par calculer la target
         with torch.no_grad():
             target_next_act = self.target_net.policy(b_new)
-            target = b_reward + self.discount * self.target_net.q(b_new, target_next_act) * (~b_done).float()
+            target = b_reward + self.discount * self.target_net.q(b_new, target_next_act).squeeze() * (~b_done).float()
 
         preds_q = self.network.q(b_obs, b_action)
         q_loss = self.loss(preds_q, target)
