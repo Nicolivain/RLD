@@ -108,7 +108,8 @@ if __name__ == '__main__':
             rsum += reward
 
             if agent.time_to_learn():
-                loss = agent.learn(done)
+                results = agent.learn(done)
+                loss = results['Loss']
 
             if done and loss > 0:
                 print(str(i) + " rsum=" + str(rsum) + ", " + str(j) + " actions " + f' loss: {loss}')

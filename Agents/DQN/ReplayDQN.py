@@ -39,4 +39,4 @@ class ReplayDQN(DQN):
         if episode_done:
             self.explo *= self.decay
 
-        return loss.item()
+        return {'Loss': loss.item()}

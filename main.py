@@ -10,12 +10,11 @@ if __name__ == '__main__':
     # SEARCH CONFIG:
 
     mode  = ['DDPG'][0]
-    env   = ['pendulum'][0]
+    env   = ['Pendulum', 'MontainCar', 'Gridworld', 'LunarLander', 'Cartpole', 'QLGridworld'][0]
 
     n_training = 5
 
     save_root_dir = 'XP'
-
 
     # SEARCH
     # Tous les params ne sont pas nécéssairement utiles pour tous les modèles
@@ -23,7 +22,12 @@ if __name__ == '__main__':
     models = {'DDPG': DDPG,
               }[mode]
 
-    config_path = {'pendulum': 'Training/configs/config_random_pendulum.yaml',
+    config_path = {'Pendulum'   : 'Training/configs/config_random_pendulum.yaml',
+                   'MountainCar': 'Training/configs/config_random_mountain_car.yaml',
+                   'LunarLander': 'Training/configs/config_random_lunar.yaml',
+                   'Gridword'   : 'Training/configs/config_random_gridworld.yaml',
+                   'Cartpole'   : 'Training/configs/config_random_cartpole.yaml',
+                   'QLGridworld': 'Training/configs/config_qleanring_gridworld.yaml',
                    }[env]
 
     agent_params = {'layers': [20, 20],
@@ -44,7 +48,7 @@ if __name__ == '__main__':
                     'q_learningRate'       : [0.01, 0.001, 0.0005, 0.0001],
                     }
 
-    save_path = os.path.join(save_root_dir, mode)
+    save_path = os.path.join(save_root_dir, env, mode)
 
     sch = TaskScheduler(models, search_space, config_path, agent_params, save_path, model_save_tag=mode)
     sch.search(n_training)

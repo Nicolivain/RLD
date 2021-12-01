@@ -8,7 +8,6 @@ matplotlib.use("Qt5agg")
 # matplotlib.use("TkAgg")
 
 if __name__ == '__main__':
-    # TODO parameters/network stuff
     mode = ['A2C'][0]
     env, config, outdir, logger = init('Training/configs/config_random_cartpole.yaml', mode)
 
@@ -31,6 +30,7 @@ if __name__ == '__main__':
     reward = 0
     done = False
     loss = None
+    results = {}
     for i in range(episode_count):
         checkConfUpdate(outdir, config)
 
@@ -94,11 +94,14 @@ if __name__ == '__main__':
             rsum += reward
 
             if agent.time_to_learn():
-                loss = agent.learn(done)
+                results = agent.learn(done)
+                loss = results['Loss']
+
             if done and loss is not None:
                 print(str(i) + " rsum=" + str(rsum) + ", " + str(j) + " actions " + f' loss: {loss}')
                 logger.direct_write("reward", rsum, i)
-                logger.direct_write('loss', loss, i)
+                for k, v in results.items():
+                    logger.direct_write(k, v, i)
                 agent.nbEvents = 0
                 mean += rsum
                 rsum = 0

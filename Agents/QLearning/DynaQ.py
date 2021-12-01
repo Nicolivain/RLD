@@ -29,6 +29,8 @@ class DynaQ(QAgent):
         if done:
             self.explo *= self.decay
 
+        return {}
+
     def planning(self):
         for k in range(self.planning_iter):
             st, at         = self.mdp.sample()

@@ -101,4 +101,4 @@ class AdaptativePPO(A2C):
         del self.memory
         self.memory = Memory(mem_size=self.memory_size)
 
-        return avg_policy_loss/self.k, loss
+        return {'Avg Policy Loss': avg_policy_loss/self.k, 'Value Loss': loss}

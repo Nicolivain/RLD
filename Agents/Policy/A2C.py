@@ -80,4 +80,4 @@ class A2C(Agent):
         del self.memory
         self.memory = Memory(mem_size=self.memory_size)
 
-        return loss.item()
+        return {'Loss': loss.item(), 'J': j.item()}

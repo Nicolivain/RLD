@@ -78,7 +78,7 @@ class DDPG(Agent):
             qloss, ploss = self._train_batch()
             mean_qloss += qloss
             mean_ploss += ploss
-        return mean_qloss/self.batch_per_learn, mean_ploss/self.batch_per_learn
+        return {'Q Loss': mean_qloss/self.batch_per_learn, 'Policy Loss': mean_ploss/self.batch_per_learn}
 
     def _train_batch(self):
         batches = self.memory.sample_batch(batch_size=self.batch_size)

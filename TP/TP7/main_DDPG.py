@@ -94,7 +94,8 @@ if __name__ == '__main__':
             rsum += reward
 
             if agent.time_to_learn():
-                value_loss, policy_loss = agent.learn(done)
+                results = agent.learn(done)
+                value_loss, policy_loss = results['Q Loss'], results['Policy Loss']
             if done and policy_loss is not None:
                 print(
                     'Episode {:5d} Reward: {:3.1f} #Action: {:4d} Policy Loss: {:1.6f} Value Loss: {:1.6f}'.format(

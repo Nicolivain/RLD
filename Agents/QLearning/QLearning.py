@@ -21,5 +21,7 @@ class QLearning(QAgent):
         if done:
             self.explo *= self.decay
 
+        return {}
+
     def act(self, obs):
         return super().act(obs)

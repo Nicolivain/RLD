@@ -29,7 +29,7 @@ class TaskScheduler:
                     args[key] = float(args[key])
         return args
 
-    def search(self, n_test):
+    def search(self, n_test, freq_print_episode=500, render_env=False):
         for i in range(n_test):
             print(f'Training model: {i + 1}')
             start_time = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -54,11 +54,11 @@ class TaskScheduler:
             agent_params['opt'] = config
 
             agent = self.agent(**agent_params)
-            TaskScheduler.train_agent(agent, env, config, outdir, logger)
+            TaskScheduler.train_agent(agent, env, config, outdir, logger, render_env=render_env, freq_print_episode=freq_print_episode)
             del agent, agent_params
 
     @staticmethod
-    def train_agent(agent, env, config, outdir, logger, render_env=False):
+    def train_agent(agent, env, config, outdir, logger, render_env=False, freq_print_episode=500):
 
         env.seed(config["seed"])
 
@@ -69,7 +69,8 @@ class TaskScheduler:
 
         mean = 0
         itest = 0
-        policy_loss, value_loss = None, None
+        result_dict = {}
+        has_learnt = False
         for i in range(episode_count):
             rsum = 0
             agent.nbEvents = 0
@@ -132,14 +133,14 @@ class TaskScheduler:
                 rsum += reward
 
                 if agent.time_to_learn():
-                    value_loss, policy_loss = agent.learn(done)
-                if done and policy_loss is not None:
-                    print(
-                        'Episode {:5d} Reward: {:3.1f} #Action: {:4d} Policy Loss: {:1.6f} Value Loss: {:1.6f}'.format(
-                            i, rsum, j, policy_loss, value_loss))
-                    logger.direct_write("reward", rsum, i)
-                    logger.direct_write('average policy loss', policy_loss, i)
-                    logger.direct_write('value loss', value_loss, i)
+                    result_dict = agent.learn(done)
+                    has_learnt = True
+                if done and has_learnt:
+                    if i % freq_print_episode == 0:
+                        print('Episode {:5d} Reward: {:3.1f} #Action: {:4d}'.format(i, rsum, j))
+                    logger.direct_write("Reward", rsum, i)
+                    for k, v in result_dict.items():
+                        logger.direct_write(k, v, i)
                     agent.nbEvents = 0
                     mean += rsum
                     rsum = 0
