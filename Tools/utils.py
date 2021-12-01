@@ -177,7 +177,7 @@ def logRun(name, config, agent_object):
     return logger, outdir
 
 
-def init(config_file, algoName, outdir=None, copy_config=True):
+def init(config_file, algoName, outdir=None, copy_config=True, launch_tb=True):
     config = load_yaml(config_file)
     env = gym.make(config["env"])
     if config.get("import") is not None:
@@ -198,6 +198,7 @@ def init(config_file, algoName, outdir=None, copy_config=True):
     if copy_config:
         write_yaml(os.path.join(outdir, 'config.yaml'), config)
     logger = LogMe(SummaryWriter(outdir))
-    loadTensorBoard(outdir)
+    if launch_tb:
+        loadTensorBoard(outdir)
 
     return env, config, outdir, logger

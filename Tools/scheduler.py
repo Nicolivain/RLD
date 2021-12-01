@@ -1,6 +1,7 @@
 import datetime
 from copy import deepcopy
 
+import torch
 from numpy.random import choice
 
 from Tools.utils import *
@@ -34,7 +35,7 @@ class TaskScheduler:
             start_time = datetime.now().strftime("%Y%m%d-%H%M%S")
             dir_path = os.path.join(self.save_path, 'tag-' + start_time + self.model_tag)
 
-            env, config, outdir, logger = init(self.config_path, self.model_tag, outdir=dir_path, copy_config=False)
+            env, config, outdir, logger = init(self.config_path, self.model_tag, outdir=dir_path, copy_config=False, launch_tb=False)
 
             # manual seed for reproduciability
             torch.manual_seed(config['seed'])
