@@ -61,7 +61,7 @@ class DDPG(Agent):
         n = torch.zeros(1)
         if not self.test:
             n = self.noise.sample()
-            n = torch.rand(1) * 0.1
+            # n = torch.rand(1) * 0.1
         o = (a+n).squeeze()
         return torch.clamp(o, self.min, self.max)
 

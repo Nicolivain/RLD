@@ -177,7 +177,7 @@ def logRun(name, config, agent_object):
     return logger, outdir
 
 
-def init(config_file, algoName):
+def init(config_file, algoName, outdir=None, copy_config=True):
     config = load_yaml(config_file)
     env = gym.make(config["env"])
     if config.get("import") is not None:
@@ -188,12 +188,15 @@ def init(config_file, algoName):
 
     now = datetime.now()
     date_time = now.strftime("%d-%m-%Y-%HH%M-%SS")
-    outdir = "./XP/" + config["env"] + "/" + algoName + "_" + date_time
+
+    if outdir is None:
+        outdir = "./XP/" + config["env"] + "/" + algoName + "_" + date_time
 
     print("Saving in " + outdir)
     os.makedirs(outdir, exist_ok=True)
     save_src(os.path.abspath(outdir))
-    write_yaml(os.path.join(outdir, 'config.yaml'), config)
+    if copy_config:
+        write_yaml(os.path.join(outdir, 'config.yaml'), config)
     logger = LogMe(SummaryWriter(outdir))
     loadTensorBoard(outdir)
 
