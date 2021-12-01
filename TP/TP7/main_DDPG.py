@@ -10,7 +10,7 @@ matplotlib.use("Qt5agg")
 if __name__ == '__main__':
 
     mode = ['DDPG'][0]
-    env, config, outdir, logger = init('Training/configs/config_random_mountain_car.yaml', mode)
+    env, config, outdir, logger = init('Training/configs/config_random_pendulum.yaml', mode)
 
     torch.manual_seed(config['seed'])
     freqTest = config["freqTest"]

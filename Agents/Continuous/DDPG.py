@@ -23,7 +23,7 @@ class QPolicyNet:
 
 
 class DDPG(Agent):
-    def __init__(self, env, opt, layers, batch_per_learn=10, loss='smoothL1', batch_size=1000, memory_size=10000):
+    def __init__(self, env, opt, layers, batch_per_learn=10, loss='smoothL1', batch_size=1000, memory_size=10000, **kwargs):
         super().__init__(env, opt)
 
         self.featureExtractor = opt.featExtractor(env)

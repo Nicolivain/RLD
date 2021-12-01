@@ -1,8 +1,6 @@
 import datetime
-import os
 from copy import deepcopy
 
-import torch
 from numpy.random import choice
 
 from Tools.utils import *
@@ -22,7 +20,9 @@ class TaskScheduler:
         for key, possible_values in self.search_space.items():
             if key in args:
                 args[key] = choice(possible_values, 1)[0]
-                if args[key] / int(args[key]) == 1.0:
+                if type(args[key]) == list or type(args[key]) == tuple:
+                    continue
+                elif args[key] / int(args[key]) == 1.0:
                     args[key] = int(args[key])
                 else:
                     args[key] = float(args[key])
@@ -31,25 +31,33 @@ class TaskScheduler:
     def search(self, n_test):
         for i in range(n_test):
             print(f'Training model: {i + 1}')
-            start_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+            start_time = datetime.now().strftime("%Y%m%d-%H%M%S")
             dir_path = os.path.join(self.save_path, 'tag-' + start_time + self.model_tag)
 
             env, config, outdir, logger = init(self.config_path, self.model_tag, outdir=dir_path, copy_config=False)
 
-            agent_params = deepcopy(self.agent_params)
-
-            agent_params = self.randomize_args(agent_params)
-            config       = self.randomize_args(config)
-
-            write_yaml(os.path.join(dir_path, 'agent_params'), agent_params)
-            write_yaml(os.path.join(dir_path, 'config'), config)
-
+            # manual seed for reproduciability
             torch.manual_seed(config['seed'])
 
-            agent = self.agent(**agent_params)
-            self.train_agent(agent, env, config, outdir, logger)
+            agent_params = deepcopy(self.agent_params)
 
-    def train_agent(self, agent, env, config, outdir, logger):
+            # random search
+            agent_params = self.randomize_args(agent_params)
+            config       = self.randomize_args(config)
+            write_yaml(os.path.join(dir_path, 'agent_params'), agent_params)
+            write_yaml(os.path.join(dir_path, 'config'), config)
+            print(agent_params)
+            print(config)
+            # adding environnement parameters
+            agent_params['env'] = env
+            agent_params['opt'] = config
+
+            agent = self.agent(**agent_params)
+            TaskScheduler.train_agent(agent, env, config, outdir, logger)
+            del agent, agent_params
+
+    @staticmethod
+    def train_agent(agent, env, config, outdir, logger, render_env=False):
 
         env.seed(config["seed"])
 
@@ -67,7 +75,7 @@ class TaskScheduler:
             ob = env.reset()
 
             # On souhaite afficher l'environnement (attention à ne pas trop afficher car çà ralentit beaucoup)
-            if i % int(config["freqVerbose"]) == 0:
+            if i % int(config["freqVerbose"]) == 0 and render_env:
                 verbose = True
             else:
                 verbose = False
