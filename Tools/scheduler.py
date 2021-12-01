@@ -33,7 +33,7 @@ class TaskScheduler:
         for i in range(n_test):
             print(f'Training model: {i + 1}')
             start_time = datetime.now().strftime("%Y%m%d-%H%M%S")
-            dir_path = os.path.join(self.save_path, 'tag-' + start_time + self.model_tag)
+            dir_path = os.path.join(self.save_path, 'tag-' + start_time + '_' + self.model_tag)
 
             env, config, outdir, logger = init(self.config_path, self.model_tag, outdir=dir_path, copy_config=False, launch_tb=False)
 

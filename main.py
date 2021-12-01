@@ -2,6 +2,8 @@ import os
 
 from Agents.Continuous.DDPG import DDPG
 from Tools.scheduler import TaskScheduler
+from Tools.core import *
+
 
 if __name__ == '__main__':
 
@@ -32,7 +34,7 @@ if __name__ == '__main__':
                     }
 
     search_space = {'batch_per_learn'      : [1, 3, 5, 10],
-                    'batch_size'           : [32, 64, 128, 256, 512, 1024, 2048],
+                    'batch_size'           : [64, 128, 256, 512, 1024, 2048],
                     'rho'                  : [0.9, 0.95, 0.99, 0.999],
                     'freqOptim'            : [100, 1000, 2000, 5000, 10000],
                     'explo'                : [0.01, 0.05, 0.1, 0.15, 0.2],
