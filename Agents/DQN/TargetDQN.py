@@ -7,7 +7,7 @@ class TargetDQN(DQN):
     """
     DQN with target network but no memory (ie: Vanilla DQN with target network)
     """
-    def __init__(self, env, config, layers, loss='smoothL1', update_target=100):
+    def __init__(self, env, config, layers, loss='smoothL1', update_target=100, **kwargs):
         super().__init__(env, config, layers, loss, memory_size=1)
         self.target_net = deepcopy(self.Q)
         self.update_target = update_target

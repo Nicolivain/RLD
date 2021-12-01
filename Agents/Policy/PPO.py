@@ -6,7 +6,7 @@ from Tools.distributions import batched_dkl
 
 
 class AdaptativePPO(A2C):
-    def __init__(self, env, opt, layers, k, delta=1e-3, loss='smoothL1', memory_size=1000, batch_size=1000, use_dkl=True, reversed_dkl=False):
+    def __init__(self, env, opt, layers, k, delta=1e-3, loss='smoothL1', memory_size=1000, batch_size=1000, use_dkl=True, reversed_dkl=False, **kwargs):
         super(AdaptativePPO, self).__init__(env, opt, layers, loss, batch_size, memory_size)
         self.beta = 1
         self.delta = delta

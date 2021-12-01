@@ -6,7 +6,7 @@ class ReplayDQN(DQN):
     """
     DQN with memory but no target network
     """
-    def __init__(self, env, config, layers, loss='smoothL1', memory_size=10000, batch_size=100):
+    def __init__(self, env, config, layers, loss='smoothL1', memory_size=10000, batch_size=100, **kwargs):
         super().__init__(env, config, layers, loss, memory_size=memory_size)
         self.batch_size  = batch_size
 

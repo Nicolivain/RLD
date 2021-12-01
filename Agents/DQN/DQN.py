@@ -8,7 +8,7 @@ from Tools.exploration import pick_greedy, pick_epsilon_greedy, pick_ucb
 
 class DQN(Agent):
 
-    def __init__(self, env, config, layers, loss='smoothL1', memory_size=1, batch_size=100):
+    def __init__(self, env, config, layers, loss='smoothL1', memory_size=1, batch_size=100, **kwargs):
         super().__init__(env, config)
 
         # TODO: test one layer
