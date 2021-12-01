@@ -1,6 +1,17 @@
 import os
 
+from Agents.DQN.DQN import DQN
+from Agents.DQN.DuelingDQN import DuelingDQN
+from Agents.DQN.ReplayDQN import ReplayDQN
+from Agents.DQN.TargetDQN import TargetDQN
+from Agents.DQN.minDQN import MinDQN
+
+from Agents.Policy.A2C import A2C
+from Agents.Policy.PPO import AdaptativePPO
+from Agents.Policy.ClippedPPO import ClippedPPO
+
 from Agents.Continuous.DDPG import DDPG
+
 from Tools.scheduler import TaskScheduler
 from Tools.core import *
 
@@ -9,7 +20,16 @@ if __name__ == '__main__':
 
     # SEARCH CONFIG:
 
-    mode  = ['DDPG'][0]
+    mode  = {0: 'DQN',
+             1: 'ReplayDQN',
+             2: 'TargetDQN',
+             3: 'minDQN',
+             4: 'DuelingDQN',
+             5: 'A2C',
+             6: 'PPO',
+             7: 'ClippedPPO',
+             8: 'DDPG'}[8]
+
     env   = ['Pendulum', 'MontainCar', 'Gridworld', 'LunarLander', 'Cartpole', 'QLGridworld'][0]
 
     n_training = 5
@@ -19,7 +39,15 @@ if __name__ == '__main__':
     # SEARCH
     # Tous les params ne sont pas nécéssairement utiles pour tous les modèles
 
-    models = {'DDPG': DDPG,
+    models = {'DQN' : DQN,
+              'ReplayDQN': ReplayDQN,
+              'TargetDQN': TargetDQN,
+              'minDQN': MinDQN,
+              'DuelingDQN': DuelingDQN,
+              'A2C': A2C,
+              'PPO': AdaptativePPO,
+              'ClippedPPO': ClippedPPO,
+              'DDPG': DDPG,
               }[mode]
 
     config_path = {'Pendulum'   : 'Training/configs/config_random_pendulum.yaml',
