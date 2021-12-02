@@ -19,6 +19,8 @@ class QPolicyNet:
         return self.policy_net(x)
 
     def q(self, obs, action):
+        action = action.float()
+        obs = obs.float()
         ipt = torch.cat([obs, action], dim=-1)
         return self.q_net(ipt)
 
