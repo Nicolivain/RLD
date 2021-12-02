@@ -1,4 +1,4 @@
-env: Pendulum-v0                                                  # environnement
+env: Pendulum-v1                                                  # environnement
 seed: 5
 featExtractor: !!python/name:__main__.NothingToDo ''
 freqSave: 1000
@@ -11,9 +11,9 @@ nbEpisodes: 10000
 maxLengthTest: 500                                                                    # Longueur maxi des trajectoires en Test
 maxLengthTrain: 300
 exploMode: 0                                                                          # Mode d'exploration. 0 = epsilon-greedy (les autres a regarder je sais plus)
-explo: 0.1                                                                            # coefficient d'exploration initial
+explo: 0.2                                                                            # coefficient d'exploration initial
 decay: 0.99999                                                                         # a la fin de chaque trajectoire, le coefficient d'explo est multiplié par ce facteur
 gamma: 0.99                                                                          # Facteur de discount
-p_learningRate: 0.00005
-q_learningRate: 0.0005
+p_learningRate: 0.0001
+q_learningRate: 0.001
 rho: 0.995

@@ -12,7 +12,7 @@ class QPolicyNet:
     def __init__(self, in_size, action_space_size, layers, final_activation=None, activation=torch.relu, dropout=0):
 
         self.q_net      = NN(in_size + action_space_size, 1, layers=layers, final_activation=None, activation=activation, dropout=dropout)
-        self.policy_net = NN(in_size, action_space_size, layers=layers, final_activation=final_activation, activation=activation, dropout=dropout)
+        self.policy_net = NN(in_size, action_space_size, layers=layers, final_activation=None, activation=activation, dropout=dropout)
 
     def policy(self, x):
         x = x.float()
@@ -34,17 +34,17 @@ class DDPG(Agent):
         self.p_lr = opt.p_learningRate
         self.q_lr = opt.q_learningRate
 
-        self.network = QPolicyNet(in_size=self.featureExtractor.outSize, action_space_size=len(self.action_space.low), layers=layers, final_activation=torch.nn.Tanh())
-        self.target_net = deepcopy(self.network)
-        self.optim_q      = torch.optim.Adam(params=self.network.q_net.parameters(), lr=self.q_lr)
-        self.optim_policy = torch.optim.Adam(params=self.network.policy_net.parameters(), lr=self.p_lr)
+        self.network        = QPolicyNet(in_size=self.featureExtractor.outSize, action_space_size=len(self.action_space.low), layers=layers, final_activation=torch.nn.Tanh())
+        self.target_net     = deepcopy(self.network)
+        self.optim_q        = torch.optim.Adam(params=self.network.q_net.parameters(), lr=self.q_lr)
+        self.optim_policy   = torch.optim.Adam(params=self.network.policy_net.parameters(), lr=self.p_lr)
 
         self.memory = Memory(mem_size=memory_size)
         self.batch_size = batch_size
         self.memory_size = memory_size
         self.batch_per_learn = batch_per_learn
 
-        self.noise = Orn_Uhlen(n_actions=len(self.action_space.low))  # ??
+        self.noise = Orn_Uhlen(n_actions=len(self.action_space.low), sigma=self.explo)  # ??
 
         self.rho = opt.rho
 
