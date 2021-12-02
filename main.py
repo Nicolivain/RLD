@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     env   = ['Pendulum', 'MontainCar', 'Gridworld', 'LunarLander', 'Cartpole', 'QLGridworld'][0]
 
-    n_training = 5
+    n_training = 50
 
     save_root_dir = 'XP'
 
