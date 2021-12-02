@@ -84,7 +84,7 @@ class TaskScheduler:
 
             # C'est le moment de tester l'agent
             if i % freqTest == 0 and i >= freqTest:  # Same as train for now
-                print("Test time! ")
+                # print("Test time! ")
                 mean = 0
                 agent.test = True
 
