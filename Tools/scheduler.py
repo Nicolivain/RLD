@@ -90,7 +90,7 @@ class TaskScheduler:
 
             # On a fini cette session de test
             if i % freqTest == nbTest and i > freqTest:
-                print("End of test, mean reward=", mean / nbTest)
+                # print("End of test, mean reward=", mean / nbTest)
                 itest += 1
                 logger.direct_write("rewardTest", mean / nbTest, itest)
                 agent.test = False
