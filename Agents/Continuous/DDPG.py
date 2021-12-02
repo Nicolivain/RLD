@@ -15,6 +15,7 @@ class QPolicyNet:
         self.policy_net = NN(in_size, action_space_size, layers=layers, final_activation=final_activation, activation=activation, dropout=dropout)
 
     def policy(self, x):
+        x = x.float()
         return self.policy_net(x)
 
     def q(self, obs, action):
