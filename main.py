@@ -37,7 +37,7 @@ if __name__ == '__main__':
     save_root_dir = 'XP'
 
     # SEARCH
-    # Tous les params ne sont pas necessairement utiles pour tous les modèles
+    # Tous les params ne sont pas necessairement utiles pour tous les modeles
 
     models = {'DQN' : DQN,
               'ReplayDQN': ReplayDQN,
