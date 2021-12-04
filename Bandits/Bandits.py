@@ -8,8 +8,12 @@ class UCBArm():
         self.T = 0
         self.rewards = 0
 
-    def compute_b(self, step):
-        b = self.rewards/self.T + np.sqrt(2*np.log(step)/self.T) if self.T !=0 else 10**10
+    def compute_b(self, step, var):
+        if var == True :
+            v = np.var(self.rewards) #empirical variance
+            b = self.rewards/self.T + np.sqrt(2*np.log(step)*v/self.T) + np.log(step)/(2*self.T) if self.T != 0 else 10**10
+        else :
+            b = self.rewards/self.T + np.sqrt(2*np.log(step)/self.T) if self.T !=0 else 10**10
         return b
 
     def update(self, reward):
@@ -17,12 +21,13 @@ class UCBArm():
         self.rewards += reward
 
 class UCB():
-    def __init__(self, n_arms):
+    def __init__(self, n_arms, var=False):
         self.n_arms = n_arms
         self.arms = [UCBArm(i) for i in range(n_arms)]
+        self.var = var
 
     def pick_arm(self, step):
-        bs = [a.compute_b(step) for a in self.arms]
+        bs = [a.compute_b(step, self.var) for a in self.arms]
         return argmax(bs)
 
 class LinUCBArm():

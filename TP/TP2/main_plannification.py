@@ -4,9 +4,12 @@ import Tools.gridworld
 from Agents.Plannification.PolicyIteration import PolicyIterationAgent
 from Agents.Plannification.ValueIteration import ValueIterationAgent
 import numpy as np
-
+from torch.utils.tensorboard import SummaryWriter
+import datetime
 
 matplotlib.use("TkAgg")
+
+start_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
 if __name__ == '__main__':
 
@@ -29,6 +32,9 @@ if __name__ == '__main__':
     agent = [ValueIterationAgent(env.action_space, env),
              PolicyIterationAgent(env.action_space, env)][1]
 
+    str_agent = "Policy_Iteration"
+    writer = SummaryWriter("runs/tag-" + start_time + '_' + str_agent + '_gamma ='+ str(gamma))
+
     agent.compute_policy(epsilon, gamma)
 
     episode_count = 100
@@ -46,6 +52,9 @@ if __name__ == '__main__':
         while True:
             action = agent.act(obs)
             obs, reward, done, _ = env.step(action)
+            if i==20:
+                writer.add_scalar(str_agent + '_Gamma=' + str(gamma) + '/Cumsum', rsum, j)
+                writer.add_scalar(str_agent + '_Gamma=' + str(gamma) + '/Reward', reward, j)
             rsum += reward
             j += 1
             if env.verbose:
