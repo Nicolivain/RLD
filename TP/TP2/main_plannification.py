@@ -27,13 +27,14 @@ if __name__ == '__main__':
 
     # Execution avec un Agent
     epsilon = 1e-10
-    gamma = 0.99
+    gamma = 0.25
 
+    # Choice of an agent
+    str_agent = "Policy_Iteration"
     agent = [ValueIterationAgent(env.action_space, env),
              PolicyIterationAgent(env.action_space, env)][1]
 
-    str_agent = "Policy_Iteration"
-    writer = SummaryWriter("runs/tag-" + start_time + '_' + str_agent + '_gamma ='+ str(gamma))
+
 
     agent.compute_policy(epsilon, gamma)
 
@@ -41,7 +42,7 @@ if __name__ == '__main__':
     reward = 0
     done = False
     rsum = 0
-
+    writer = SummaryWriter('runs/tag-' + start_time + '_' + str_agent + '_gamma=' + str(gamma) + '_100_episodes_plan0')
     for i in range(episode_count):
         obs = env.reset()
         env.verbose = (i % 100 == 0 and i > 0)  # afficher 1 episode sur 100
@@ -49,17 +50,20 @@ if __name__ == '__main__':
             env.render()
         j = 0
         rsum = 0
+        l=[]
         while True:
             action = agent.act(obs)
             obs, reward, done, _ = env.step(action)
-            if i==20:
-                writer.add_scalar(str_agent + '_Gamma=' + str(gamma) + '/Cumsum', rsum, j)
-                writer.add_scalar(str_agent + '_Gamma=' + str(gamma) + '/Reward', reward, j)
-            rsum += reward
+            l.append(reward)
             j += 1
             if env.verbose:
                 env.render()
             if done:
+                r = np.array(l)
+                rsum = np.sum(r)
+                writer.add_histogram('Through ' + str(episode_count) + ' episodes', r, i, bins='auto')
+                writer.add_scalar('Number of actions with expensive cost', j, i)
+                writer.add_scalar('Cumulative sum of rewards', rsum, i)
                 print("Episode : " + str(i) + " rsum=" + str(rsum) + ", " + str(j) + " actions")
                 break
 
