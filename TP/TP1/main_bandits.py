@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     # UCB-V
 
-    print('\n--- Average click rate for UCB-V based policies ---\n'')
+    print('\n--- Average click rate for UCB-V based policies ---\n')
     g = 0
     m = UCB(10, var=True)
 
