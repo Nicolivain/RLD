@@ -1,0 +1,19 @@
+decay: 0.99999
+env: Pendulum-v0
+explo: 0.01
+exploMode: 0
+featExtractor: !!python/name:Tools.core.NothingToDo ''
+freqOptim: 5000
+freqSave: 1000
+freqTest: 100
+freqVerbose: 100
+fromFile: null
+gamma: 0.95
+maxLengthTest: 500
+maxLengthTrain: 300
+nbEpisodes: 10000
+nbTest: 1
+p_learningRate: 0.001
+q_learningRate: 0.01
+rho: 0.95
+seed: 5

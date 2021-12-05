@@ -1,0 +1,17 @@
+decay: 0.99999
+env: CartPole-v1
+explo: 0.1
+exploMode: 0
+featExtractor: !!python/name:Tools.core.NothingToDo ''
+freqOptim: 1000
+freqSave: 1000
+freqTest: 100
+freqVerbose: 100
+fromFile: null
+gamma: 0.99
+learningRate: 0.001
+maxLengthTest: 500
+maxLengthTrain: 300
+nbEpisodes: 15000
+nbTest: 1
+seed: 5
