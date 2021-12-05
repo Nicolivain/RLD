@@ -20,7 +20,7 @@ exploMode: 0                                                                    
 explo: 0.1                                                                            # coefficient d'exploration initial
 decay: 0.999                                                                          # a la fin de chaque trajectoire, le coefficient d'explo est multiplié par ce facteur
 gamma: 0.99                                                                           # Facteur de discount
-learningRate: 0.1                                                                     # Pas d'apprentissage
+learningRate: 0.01                                                                     # Pas d'apprentissage
 eligibility: 0                                                                        # coefficient d'eligibilité (le lambda du Q(lambda))
 eligibilityThreshold: 0                                                               # en dessous de ce niveau de score d'eligibilité on coupe (pour aller plus vite)
 sarsa: false                                                                          # si true = sarsa, sinon qlearning
