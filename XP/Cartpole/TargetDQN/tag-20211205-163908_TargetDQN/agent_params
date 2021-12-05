@@ -1,0 +1,8 @@
+batch_per_learn: 1
+batch_size: 1024
+layers:
+- 24
+- 24
+memory_size: 10000
+rho: 0.999
+update_target: 500
