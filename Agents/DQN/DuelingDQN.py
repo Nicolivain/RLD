@@ -26,8 +26,8 @@ class DuelingDQN(MinDQN):
     Modifying the minDQN to implement the Dueling DQN
     We only need to replace the Q network with the new DuelingNN
     """
-    def __init__(self, env, config, layers, loss='mse', memory_size=10000, batch_size=100, update_target=100, **kwargs):
-        super().__init__(env, config, layers, loss, memory_size, batch_size, update_target)
+    def __init__(self, env, opt, layers, loss='mse', memory_size=10000, batch_size=100, update_target=100, **kwargs):
+        super().__init__(env, opt, layers, loss, memory_size, batch_size, update_target)
 
         # Building the network and re-setup the optimizer
         self.Q = DuelingNN(self.featureExtractor.outSize, self.action_space.n, layers, layers)

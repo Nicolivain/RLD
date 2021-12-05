@@ -8,18 +8,18 @@ from Tools.exploration import pick_greedy, pick_epsilon_greedy, pick_ucb
 
 class DQN(Agent):
 
-    def __init__(self, env, config, layers, loss='smoothL1', memory_size=1, batch_size=100, **kwargs):
-        super().__init__(env, config)
+    def __init__(self, env, opt, layers, loss='smoothL1', memory_size=1, batch_size=100, **kwargs):
+        super().__init__(env, opt)
 
         # TODO: test one layer
-        self.featureExtractor = config.featExtractor(env)
+        self.featureExtractor = opt.featExtractor(env)
         self.Q                = NN(self.featureExtractor.outSize, self.action_space.n, layers=layers, final_activation=torch.nn.ReLU(), activation=torch.nn.ReLU())
         self.loss             = torch.nn.SmoothL1Loss() if loss == 'smoothL1' else torch.nn.MSELoss()
         self.optim            = torch.optim.Adam(self.Q.parameters(), lr=self.alpha)
         self.memory           = Memory(memory_size)
         self.memory_size      = memory_size
 
-        self.freq_optim       = self.config.freqOptim
+        self.freq_optim       = self.opt.freqOptim
         self.n_events         = 0
 
     def time_to_learn(self):

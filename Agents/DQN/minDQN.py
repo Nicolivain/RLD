@@ -5,8 +5,8 @@ from copy import deepcopy
 
 
 class MinDQN(DQN):
-    def __init__(self, env, config, layers, loss='mse', memory_size=10000, batch_size=100, update_target=100, **kwargs):
-        super().__init__(env, config, layers, loss, memory_size)
+    def __init__(self, env, opt, layers, loss='mse', memory_size=10000, batch_size=100, update_target=100, **kwargs):
+        super().__init__(env, opt, layers, loss, memory_size)
         self.batch_size = batch_size
         self.target_net = deepcopy(self.Q)
         self.update_target = update_target
