@@ -19,7 +19,7 @@ class DQN(Agent):
         self.memory           = Memory(memory_size)
         self.memory_size      = memory_size
 
-        self.freq_optim       = self.opt.freqOptim
+        self.freq_optim       = self.config.freqOptim
         self.n_events         = 0
 
     def time_to_learn(self):
