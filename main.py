@@ -28,11 +28,16 @@ if __name__ == '__main__':
              5: 'A2C',
              6: 'PPO',
              7: 'ClippedPPO',
-             8: 'DDPG'}[8]
+             8: 'DDPG'}[6]
 
-    env   = ['Pendulum', 'MontainCar', 'Gridworld', 'LunarLander', 'Cartpole', 'QLGridworld'][0]
+    env   = {0: 'Pendulum',
+             1: 'MontainCar',
+             2: 'Gridworld',
+             3: 'LunarLander',
+             4: 'Cartpole',
+             5: 'QLGridworld'}[4]
 
-    n_training = 50
+    n_training = 30
 
     save_root_dir = 'XP'
 
@@ -53,27 +58,29 @@ if __name__ == '__main__':
     config_path = {'Pendulum'   : 'Training/configs/config_random_pendulum.yaml',
                    'MountainCar': 'Training/configs/config_random_mountain_car.yaml',
                    'LunarLander': 'Training/configs/config_random_lunar.yaml',
-                   'Gridword'   : 'Training/configs/config_random_gridworld.yaml',
+                   'Gridworld'  : 'Training/configs/config_random_gridworld.yaml',
                    'Cartpole'   : 'Training/configs/config_random_cartpole.yaml',
                    'QLGridworld': 'Training/configs/config_qleanring_gridworld.yaml',
                    }[env]
 
-    agent_params = {'layers': [20, 20],
-                    'batch_per_learn': 3,
-                    'memory_size': 10000,
-                    'batch_size': 1000,
-                    'rho': 0.99
+    agent_params = {'layers'            : [24, 24],
+                    'k'                 : 10,
+                    'reversed_dkl'      : True,
+                    'use_dkl'           : True,
+                    'batch_per_learn'   : 3,
+                    'memory_size'       : 100,
+                    'batch_size'        : 64,
+                    'update_target'     : 500,
                     }
 
     search_space = {'batch_per_learn'      : [1, 3, 5, 10],
-                    'batch_size'           : [64, 128, 256, 512, 1024, 2048],
+                    'update_target'        : [100, 500, 1000],
+                    'k'                    : [5, 10, 20],
                     'rho'                  : [0.9, 0.95, 0.99, 0.999],
-                    'freqOptim'            : [100, 1000, 2000, 5000, 10000],
-                    'explo'                : [0.01, 0.05, 0.1, 0.15, 0.2],
-                    'gamma'                : [0.9, 0.95, 0.99, 0.999, 0.9999],
-                    'learningRate'         : [0.01, 0.001, 0.0005, 0.0001],
-                    'p_learningRate'       : [0.01, 0.001, 0.0005, 0.0001],
-                    'q_learningRate'       : [0.01, 0.001, 0.0005, 0.0001],
+                    'explo'                : [0.05, 0.1, 0.15, 0.2],
+                    'gamma'                : [0.98, 0.99, 0.999, 0.9999],
+                    "memory_size"          : [100, 200, 500],
+                    'learningRate'         : [0.01, 0.001, 0.0001],
                     }
 
     save_path = os.path.join(save_root_dir, env, mode)

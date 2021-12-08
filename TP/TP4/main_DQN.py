@@ -7,13 +7,14 @@ from Agents.DQN.TargetDQN import TargetDQN
 from Agents.DQN.minDQN import MinDQN
 from Tools.core import *
 from Tools.utils import *
+import Tools.gridworld
 
-matplotlib.use("Qt5agg")
-# matplotlib.use("TkAgg")
+# matplotlib.use("Qt5agg")
+matplotlib.use("TkAgg")
 
 if __name__ == '__main__':
 
-    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN', 'DuelingDQN'][4]
+    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN', 'DuelingDQN'][3]
     env, config, outdir, logger = init('Training/configs/config_random_cartpole.yaml', mode)
 
     torch.manual_seed(config['seed'])
@@ -28,7 +29,7 @@ if __name__ == '__main__':
     agent = {'DQN'          : DQN(env, config, layers=[200]),
              'ReplayDQN'    : ReplayDQN(env, config, layers=[24, 24], memory_size=3000, batch_size=64),
              'TargetDQN'    : TargetDQN(env, config, layers=[24, 24], update_target=500),
-             'minDQN'       : MinDQN(env, config, layers=[24, 24], memory_size=3000, batch_size=64, update_target=500),
+             'minDQN'       : MinDQN(env, config, layers=[24, 24], memory_size=10000, batch_size=256, update_target=500),
              'DuelingDQN'   : DuelingDQN(env, config, layers=[24, 24], memory_size=3000, batch_size=64, update_target=500)
              }[mode]
 
@@ -81,7 +82,7 @@ if __name__ == '__main__':
             if verbose:
                 env.render()
 
-            ob = torch.from_numpy(new_ob)
+            ob = torch.from_numpy(new_ob).float()
             action = agent.act(ob)
             new_ob, reward, done, _ = env.step(action)
             new_ob = agent.featureExtractor.getFeatures(new_ob)
@@ -99,7 +100,7 @@ if __name__ == '__main__':
                 'obs'       : ob,
                 'action'    : action,
                 'reward'    : reward,
-                'new_obs'   : torch.from_numpy(new_ob),
+                'new_obs'   : torch.from_numpy(new_ob).float(),
                 'done'      : done,
                 'it'        : j
             }

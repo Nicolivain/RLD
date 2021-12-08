@@ -20,7 +20,7 @@ class ACNet(torch.nn.Module):
 
 
 class A2C(Agent):
-    def __init__(self, env, opt, layers, loss='smoothL1', batch_size=10, memory_size=1000, **kwargs):
+    def __init__(self, env, opt, layers, loss='smoothL1', batch_size=None, memory_size=1000, **kwargs):
         super().__init__(env, opt)
         self.featureExtractor = opt.featExtractor(env)
         self.loss = torch.nn.SmoothL1Loss() if loss == 'smoothL1' else torch.nn.MSELoss()
@@ -30,7 +30,7 @@ class A2C(Agent):
         self.optim = torch.optim.Adam(params=self.model.parameters(), lr=self.lr)
 
         self.memory = Memory(mem_size=memory_size)
-        self.batch_size = batch_size
+        self.batch_size = batch_size if batch_size else memory_size
         self.memory_size = memory_size
 
         self.n_events = 0

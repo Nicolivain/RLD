@@ -5,6 +5,7 @@ import torch
 from numpy.random import choice
 
 from Tools.utils import *
+import Tools.gridworld
 
 
 class TaskScheduler:
@@ -108,7 +109,7 @@ class TaskScheduler:
                 if verbose:
                     env.render()
 
-                ob = torch.from_numpy(new_ob)
+                ob = torch.from_numpy(new_ob).float()
                 action = agent.act(ob)
                 new_ob, reward, done, _ = env.step(action)
                 new_ob = agent.featureExtractor.getFeatures(new_ob)
@@ -119,12 +120,12 @@ class TaskScheduler:
                 if ((config["maxLengthTrain"] > 0) and (not agent.test) and (j == config["maxLengthTrain"])) or (
                         agent.test and (config["maxLengthTest"] > 0) and (j == config["maxLengthTest"])):
                     done = True
-                    print("forced done!")
+                    # print("forced done!")
 
                 transition = {
                     'obs': ob,
                     'action': action,
-                    'new_obs': torch.from_numpy(new_ob),
+                    'new_obs': torch.from_numpy(new_ob).float(),
                     'reward': reward / 100,  # rescale factor for NN
                     'done': done,
                     'it': j

@@ -7,7 +7,7 @@ nbTest: 1
 freqVerbose: 100
 freqOptim: 10                                                                          # Optimisation de la politique tous les freqOptim evenements
 fromFile: null
-nbEpisodes: 15000
+nbEpisodes: 5000
 maxLengthTest: 500                                                                    # Longueur maxi des trajectoires en Test
 maxLengthTrain: 300
 exploMode: 0                                                                          # Mode d'exploration. 0 = epsilon-greedy (les autres a regarder je sais plus)
