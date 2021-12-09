@@ -46,8 +46,8 @@ class TaskScheduler:
             # random search
             agent_params = self.randomize_args(agent_params)
             config       = self.randomize_args(config)
-            write_yaml(os.path.join(dir_path, 'agent_params'), agent_params)
-            write_yaml(os.path.join(dir_path, 'config'), config)
+            write_yaml(os.path.join(dir_path, 'agent_params.json'), agent_params)
+            write_yaml(os.path.join(dir_path, 'config.json'), config)
             print(agent_params)
             print(config)
             # adding environnement parameters

@@ -35,7 +35,7 @@ if __name__ == '__main__':
              2: 'Gridworld',
              3: 'LunarLander',
              4: 'Cartpole',
-             5: 'QLGridworld'}[4]
+             5: 'QLGridworld'}[3]
 
     n_training = 30
 
@@ -65,11 +65,11 @@ if __name__ == '__main__':
 
     agent_params = {'layers'            : [24, 24],
                     'k'                 : 10,
-                    'reversed_dkl'      : True,
+                    'reversed_dkl'      : False,
                     'use_dkl'           : True,
                     'batch_per_learn'   : 3,
                     'memory_size'       : 100,
-                    'batch_size'        : 64,
+
                     'update_target'     : 500,
                     }
 
@@ -79,7 +79,7 @@ if __name__ == '__main__':
                     'rho'                  : [0.9, 0.95, 0.99, 0.999],
                     'explo'                : [0.05, 0.1, 0.15, 0.2],
                     'gamma'                : [0.98, 0.99, 0.999, 0.9999],
-                    "memory_size"          : [100, 200, 500],
+                    'memory_size'          : [100, 200, 500],
                     'learningRate'         : [0.01, 0.001, 0.0001],
                     }
 

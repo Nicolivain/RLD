@@ -29,7 +29,7 @@ if __name__ == '__main__':
     agent = {'DQN'          : DQN(env, config, layers=[200]),
              'ReplayDQN'    : ReplayDQN(env, config, layers=[24, 24], memory_size=3000, batch_size=64),
              'TargetDQN'    : TargetDQN(env, config, layers=[24, 24], update_target=500),
-             'minDQN'       : MinDQN(env, config, layers=[24, 24], memory_size=10000, batch_size=256, update_target=500),
+             'minDQN'       : MinDQN(env, config, layers=[24, 24], memory_size=10000, batch_size=256, update_target=100),
              'DuelingDQN'   : DuelingDQN(env, config, layers=[24, 24], memory_size=3000, batch_size=64, update_target=500)
              }[mode]
 
