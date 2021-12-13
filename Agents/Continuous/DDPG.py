@@ -9,10 +9,10 @@ from Tools.core import Orn_Uhlen
 
 
 class QPolicyNet:
-    def __init__(self, in_size, action_space_size, layers, final_activation=None, activation=torch.relu, dropout=0):
+    def __init__(self, in_size, action_space_size, layers, final_activation_q=None, final_activation_p=torch.nn.Tanh(), activation_q=torch.nn.LeakyReLU(),activation_p=torch.nn.LeakyReLU(), dropout=0):
 
-        self.q_net      = NN(in_size + action_space_size, 1, layers=layers, final_activation=None, activation=activation, dropout=dropout)
-        self.policy_net = NN(in_size, action_space_size, layers=layers, final_activation=None, activation=activation, dropout=dropout)
+        self.q_net      = NN(in_size + action_space_size, 1, layers=layers, final_activation=final_activation_q, activation=activation_q, dropout=dropout)
+        self.policy_net = NN(in_size, action_space_size, layers=layers, final_activation=final_activation_p, activation=activation_p, dropout=dropout)
 
     def policy(self, x):
         x = x.float()
@@ -26,7 +26,7 @@ class QPolicyNet:
 
 
 class DDPG(Agent):
-    def __init__(self, env, opt, layers, batch_per_learn=10, loss='smoothL1', batch_size=1000, memory_size=10000, **kwargs):
+    def __init__(self, env, opt, layers, batch_per_learn=10, loss='smoothL1', batch_size=1000, memory_size=1000000, **kwargs):
         super().__init__(env, opt)
 
         self.featureExtractor = opt.featExtractor(env)
@@ -34,7 +34,7 @@ class DDPG(Agent):
         self.p_lr = opt.p_learningRate
         self.q_lr = opt.q_learningRate
 
-        self.network        = QPolicyNet(in_size=self.featureExtractor.outSize, action_space_size=len(self.action_space.low), layers=layers, final_activation=torch.nn.Tanh())
+        self.network        = QPolicyNet(in_size=self.featureExtractor.outSize, action_space_size=len(self.action_space.low), layers=layers)
         self.target_net     = deepcopy(self.network)
         self.optim_q        = torch.optim.Adam(params=self.network.q_net.parameters(), lr=self.q_lr)
         self.optim_policy   = torch.optim.Adam(params=self.network.policy_net.parameters(), lr=self.p_lr)
@@ -43,7 +43,7 @@ class DDPG(Agent):
         self.batch_size = batch_size
         self.memory_size = memory_size
         self.batch_per_learn = batch_per_learn
-
+        self.startEvents = opt.startEvents
         self.noise = Orn_Uhlen(n_actions=len(self.action_space.low), sigma=self.explo)  # ??
 
         self.rho = opt.rho
@@ -59,8 +59,11 @@ class DDPG(Agent):
             self.memory.store(transition)
 
     def act(self, obs):
-        with torch.no_grad():
-            a = self.network.policy(obs)
+        if self.n_events<self.startEvents:
+           a  = 0
+        else:
+            with torch.no_grad():
+                a = self.network.policy(obs)
         n = torch.zeros(1)
         if not self.test:
             n = self.noise.sample()
@@ -85,13 +88,12 @@ class DDPG(Agent):
 
     def _train_batch(self):
         batches = self.memory.sample_batch(batch_size=self.batch_size)
-
-        b_obs = batches['obs']
-        b_action = batches['action'].unsqueeze(-1)
-        b_reward = batches['reward']
-        b_new = batches['new_obs']
-        b_done = batches['done']
-
+        bs = batches['obs'].shape[0]
+        b_obs = batches['obs'].view(bs,-1)
+        b_action = batches['action'].view(bs,-1)
+        b_reward = batches['reward'].view(bs,-1)
+        b_new = batches['new_obs'].view(bs,-1)
+        b_done = batches['done'].view(bs,-1)
         # update q net
         q_loss = self._update_q(b_obs, b_action, b_reward, b_new, b_done)
 
@@ -108,8 +110,7 @@ class DDPG(Agent):
         # on commence par calculer la target
         with torch.no_grad():
             target_next_act = self.target_net.policy(b_new)
-            target = b_reward + self.discount * self.target_net.q(b_new, target_next_act).squeeze() * (~b_done).float()
-
+            target = b_reward + self.discount * self.target_net.q(b_new, target_next_act) * (~b_done).float()
         preds_q = self.network.q(b_obs, b_action)
         q_loss = self.loss(preds_q, target)
 
@@ -131,6 +132,7 @@ class DDPG(Agent):
         return loss_policy
 
     def _update_target(self):
+        """soft update, using rho"""
         with torch.no_grad():
             for target_p, net_p in zip(self.target_net.policy_net.parameters(), self.network.policy_net.parameters()):
                 new_p = self.rho * target_p + (1 - self.rho) * net_p
@@ -139,7 +141,3 @@ class DDPG(Agent):
             for target_p, net_p in zip(self.target_net.q_net.parameters(), self.network.q_net.parameters()):
                 new_p = self.rho * target_p + (1 - self.rho) * net_p
                 target_p.copy_(new_p)
-
-
-
-

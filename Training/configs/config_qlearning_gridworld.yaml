@@ -17,13 +17,13 @@ maxLengthTest: 500                                                              
 maxLengthTrain: 100                                                                   # Longueur maxi des trajectoires en Train
 
 exploMode: 0                                                                          # Mode d'exploration. 0 = epsilon-greedy (les autres a regarder je sais plus)
-explo: 0.1                                                                            # coefficient d'exploration initial
+explo: 0.3                                                                       # coefficient d'exploration initial
 decay: 0.999                                                                          # a la fin de chaque trajectoire, le coefficient d'explo est multiplié par ce facteur
-gamma: 0.99                                                                           # Facteur de discount
-learningRate: 0.1                                                                     # Pas d'apprentissage
+gamma: 0.9995                                                                        # Facteur de discount
+learningRate: 1                                                                     # Pas d'apprentissage
 eligibility: 0                                                                        # coefficient d'eligibilité (le lambda du Q(lambda))
 eligibilityThreshold: 0                                                               # en dessous de ce niveau de score d'eligibilité on coupe (pour aller plus vite)
-sarsa: false                                                                          # si true = sarsa, sinon qlearning
+sarsa: False                                                                          # si true = sarsa, sinon qlearning
 nbModelSamples: 0                                                                     # si > 0, dynaQ avec nbModelSamples echantillons issus du modèle apres chaque evenement
 
 execute: |                                                                              # a executer apres le chargement de l'environnement

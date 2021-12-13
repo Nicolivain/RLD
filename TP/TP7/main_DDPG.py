@@ -11,7 +11,6 @@ if __name__ == '__main__':
 
     mode = ['DDPG'][0]
     env, config, outdir, logger = init('Training/configs/config_random_pendulum.yaml', mode)
-
     torch.manual_seed(config['seed'])
     freqTest = config["freqTest"]
     freqSave = config["freqSave"]
@@ -21,7 +20,7 @@ if __name__ == '__main__':
     episode_count = config["nbEpisodes"]
 
     agent = {
-             'DDPG'          : DDPG(env, config, batch_per_learn=3, layers=[20, 20], memory_size=10000, batch_size=1024),
+             'DDPG'          : DDPG(env, config, batch_per_learn=3, layers=[100, 100], memory_size=1000000, batch_size=1024),
              }[mode]
 
     rsum = 0
@@ -72,7 +71,7 @@ if __name__ == '__main__':
 
             ob = torch.from_numpy(new_ob)
             action = agent.act(ob)
-            new_ob, reward, done, _ = env.step(action)
+            new_ob, reward, done, _ = env.step(action.numpy()) #passage en numpy ici pour la compatibilité gym
             new_ob = agent.featureExtractor.getFeatures(new_ob)
 
             j += 1
@@ -97,9 +96,9 @@ if __name__ == '__main__':
                 results = agent.learn(done)
                 value_loss, policy_loss = results['Q Loss'], results['Policy Loss']
             if done and policy_loss is not None:
-                print(
-                    'Episode {:5d} Reward: {:3.1f} #Action: {:4d} Policy Loss: {:1.6f} Value Loss: {:1.6f}'.format(
-                        i, rsum, j, policy_loss, value_loss))
+                # print(
+                #     'Episode {:5d} Reward: {:3.1f} #Action: {:4d} Policy Loss: {:1.6f} Value Loss: {:1.6f}'.format(
+                #         i, rsum, j, policy_loss, value_loss))
                 logger.direct_write("reward", rsum, i)
                 logger.direct_write('average policy loss', policy_loss, i)
                 logger.direct_write('value loss', value_loss, i)

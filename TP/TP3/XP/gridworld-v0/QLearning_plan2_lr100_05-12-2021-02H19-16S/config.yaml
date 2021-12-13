@@ -1,0 +1,26 @@
+decay: 0.999
+eligibility: 0
+eligibilityThreshold: 0
+env: gridworld-v0
+execute: env.setPlan(config["map"], config["rewards"])
+explo: 0.1
+exploMode: 0
+freqSave: 1000
+freqTest: 100
+freqVerbose: 1000
+gamma: 0.99
+learningRate: 100
+map: gridworldPlans/plan2.txt
+maxLengthTest: 500
+maxLengthTrain: 100
+nbEpisodes: 3000
+nbModelSamples: 0
+nbTest: 1
+rewards:
+  0: -0.001
+  3: 1
+  4: 1
+  5: -1
+  6: -1
+sarsa: false
+seed: 5

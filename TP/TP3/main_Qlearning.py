@@ -11,7 +11,7 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 if __name__ == '__main__':
 
-    env, config, outdir, logger = init('../../Training/configs/config_qlearning_gridworld.yaml', "QLearning")
+    env, config, outdir, logger = init('../../Training/configs/config_qlearning_gridworld.yaml', "QLearning_plan5_lr0.1") #_explo0.2_decay0.9")
 
     # Config
     freqTest = config["freqTest"]
@@ -23,9 +23,9 @@ if __name__ == '__main__':
 
     # Choose Agent
     agent = [QLearning(env, config),
-             DynaQ(env, config)][1]
+             DynaQ(env, config)][0]
 
-    agent.sarsa = 0
+    agent.sarsa = None
 
     rsum = 0
     mean = 0
