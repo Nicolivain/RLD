@@ -9,7 +9,7 @@ from Tools.core import Orn_Uhlen
 
 
 class QPolicyNet:
-    def __init__(self, in_size, action_space_size, layers, final_activation_q=None, final_activation_p=torch.nn.Tanh(), activation_q=torch.nn.LeakyReLU(),activation_p=torch.nn.LeakyReLU(), dropout=0):
+    def __init__(self, in_size, action_space_size, layers, final_activation_q=None, final_activation_p=torch.nn.Tanh(), activation_q=torch.nn.LeakyReLU(), activation_p=torch.nn.LeakyReLU(), dropout=0):
 
         self.q_net      = NN(in_size + action_space_size, 1, layers=layers, final_activation=final_activation_q, activation=activation_q, dropout=dropout)
         self.policy_net = NN(in_size, action_space_size, layers=layers, final_activation=final_activation_p, activation=activation_p, dropout=dropout)
@@ -59,8 +59,8 @@ class DDPG(Agent):
             self.memory.store(transition)
 
     def act(self, obs):
-        if self.n_events<self.startEvents:
-           a  = 0
+        if self.n_events < self.startEvents:
+            a = 0
         else:
             with torch.no_grad():
                 a = self.network.policy(obs)
@@ -88,12 +88,14 @@ class DDPG(Agent):
 
     def _train_batch(self):
         batches = self.memory.sample_batch(batch_size=self.batch_size)
+
         bs = batches['obs'].shape[0]
-        b_obs = batches['obs'].view(bs,-1)
-        b_action = batches['action'].view(bs,-1)
-        b_reward = batches['reward'].view(bs,-1)
-        b_new = batches['new_obs'].view(bs,-1)
-        b_done = batches['done'].view(bs,-1)
+        b_obs = batches['obs'].view(bs, -1)
+        b_action = batches['action'].view(bs, -1)
+        b_reward = batches['reward'].view(bs, -1)
+        b_new = batches['new_obs'].view(bs, -1)
+        b_done = batches['done'].view(bs, -1)
+
         # update q net
         q_loss = self._update_q(b_obs, b_action, b_reward, b_new, b_done)
 
@@ -106,7 +108,6 @@ class DDPG(Agent):
         return q_loss.item(), loss_policy.item()
 
     def _update_q(self, b_obs, b_action, b_reward, b_new, b_done):
-
         # on commence par calculer la target
         with torch.no_grad():
             target_next_act = self.target_net.policy(b_new)

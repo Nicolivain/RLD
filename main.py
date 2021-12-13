@@ -28,7 +28,7 @@ if __name__ == '__main__':
              5: 'A2C',
              6: 'PPO',
              7: 'ClippedPPO',
-             8: 'DDPG'}[6]
+             8: 'DDPG'}[4]
 
     env   = {0: 'Pendulum',
              1: 'MontainCar',
@@ -37,7 +37,7 @@ if __name__ == '__main__':
              4: 'Cartpole',
              5: 'QLGridworld'}[3]
 
-    n_training = 30
+    n_training = 20
 
     save_root_dir = 'XP'
 
@@ -63,24 +63,18 @@ if __name__ == '__main__':
                    'QLGridworld': 'Training/configs/config_qleanring_gridworld.yaml',
                    }[env]
 
-    agent_params = {'layers'            : [24, 24],
-                    'k'                 : 10,
-                    'reversed_dkl'      : False,
-                    'use_dkl'           : True,
-                    'batch_per_learn'   : 3,
-                    'memory_size'       : 100,
-
-                    'update_target'     : 500,
+    agent_params = {'layers'            : [20, 20],
+                    'batch_size'        : 64,
+                    'memory_size'       : 1000,
+                    'update_target'     : 100,
                     }
 
-    search_space = {'batch_per_learn'      : [1, 3, 5, 10],
-                    'update_target'        : [100, 500, 1000],
-                    'k'                    : [5, 10, 20],
-                    'rho'                  : [0.9, 0.95, 0.99, 0.999],
+    search_space = {'batch_size'           : [64, 128, 256, 512],
                     'explo'                : [0.05, 0.1, 0.15, 0.2],
-                    'gamma'                : [0.98, 0.99, 0.999, 0.9999],
-                    'memory_size'          : [100, 200, 500],
+                    'gamma'                : [0.98, 0.99, 0.999],
+                    'memory_size'          : [1000, 3000, 5000, 10000],
                     'learningRate'         : [0.01, 0.001, 0.0001],
+                    'update_target'        : [100, 500, 1000]
                     }
 
     save_path = os.path.join(save_root_dir, env, mode)
