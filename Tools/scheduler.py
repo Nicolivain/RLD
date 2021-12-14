@@ -93,7 +93,7 @@ class TaskScheduler:
             if i % freqTest == nbTest and i > freqTest:
                 # print("End of test, mean reward=", mean / nbTest)
                 itest += 1
-                logger.direct_write("rewardTest", mean / nbTest, itest)
+                logger.direct_write("Reward Test", mean / nbTest, itest)
                 agent.test = False
 
             # C'est le moment de sauver le modèle

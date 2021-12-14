@@ -28,7 +28,7 @@ if __name__ == '__main__':
              5: 'A2C',
              6: 'PPO',
              7: 'ClippedPPO',
-             8: 'DDPG'}[4]
+             8: 'DDPG'}[0]
 
     env   = {0: 'Pendulum',
              1: 'MontainCar',

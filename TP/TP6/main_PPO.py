@@ -22,14 +22,14 @@ if __name__ == '__main__':
     episode_count = config["nbEpisodes"]
 
     agent = {
-             'PPO'          : AdaptativePPO(env, config, layers=[256], k=10, memory_size=100, batch_size=100, use_dkl=True, reversed_dkl=False),
+             'PPO'          : AdaptativePPO(env, config, layers=[256], k=4, memory_size=64, batch_size=None, use_dkl=True, reversed_dkl=False),
              'ClippedPPO'   : ClippedPPO(env, config, layers=[256], k=4, memory_size=64, batch_size=None),
              'PPO_noDKL'    : AdaptativePPO(env, config, layers=[256], k=10, memory_size=100, batch_size=100, use_dkl=False)
              }[mode]
 
     rsum = 0
     mean = 0
-    verbose = True
+    verbose = False
     itest = 0
     reward = 0
     done = False

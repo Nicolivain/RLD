@@ -77,7 +77,7 @@ class AdaptativePPO(Agent):
 
     def _update_value_network(self, obs, reward, next_obs, done):
         with torch.no_grad():
-            td0 = (reward + self.discount * self.model.value(next_obs)* (~done)).float()
+            td0 = (reward + self.discount * self.model.value(next_obs) * (~done)).float()
         loss = self.loss(td0, self.model.value(obs))
         self.optim.zero_grad()
         loss.backward()

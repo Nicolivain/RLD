@@ -4,7 +4,7 @@ featExtractor: !!python/name:__main__.NothingToDo ''
 freqSave: 1000
 freqTest: 100
 nbTest: 1
-freqVerbose: 10
+freqVerbose: 100000
 freqOptim: 1000                                                                          # Optimisation de la politique tous les freqOptim evenements
 fromFile: null
 nbEpisodes: 10000

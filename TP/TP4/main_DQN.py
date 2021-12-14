@@ -14,8 +14,8 @@ matplotlib.use("TkAgg")
 
 if __name__ == '__main__':
 
-    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN', 'DuelingDQN'][3]
-    env, config, outdir, logger = init('Training/configs/config_random_cartpole.yaml', mode)
+    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN', 'DuelingDQN'][0]
+    env, config, outdir, logger = init('Training/configs/config_random_lunar.yaml', mode)
 
     torch.manual_seed(config['seed'])
     np.random.seed(config['seed'])
