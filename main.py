@@ -28,7 +28,7 @@ if __name__ == '__main__':
              5: 'A2C',
              6: 'PPO',
              7: 'ClippedPPO',
-             8: 'DDPG'}[0]
+             8: 'DDPG'}[6]
 
     env   = {0: 'Pendulum',
              1: 'MontainCar',
@@ -63,18 +63,19 @@ if __name__ == '__main__':
                    'QLGridworld': 'Training/configs/config_qleanring_gridworld.yaml',
                    }[env]
 
-    agent_params = {'layers'            : [20, 20],
-                    'batch_size'        : 64,
+    agent_params = {
+                    'layers'            : [256],
+                    'batch_size'        : None,
                     'memory_size'       : 1000,
-                    'update_target'     : 100,
+                    'k'                 : 5,
+                    'use_dkl'           : True,
+                    'reversed_dkl'      : False
                     }
 
-    search_space = {'batch_size'           : [64, 128, 256, 512],
-                    'explo'                : [0.05, 0.1, 0.15, 0.2],
+    search_space = {
                     'gamma'                : [0.98, 0.99, 0.999],
-                    'memory_size'          : [1000, 3000, 5000, 10000],
+                    'memory_size'          : [256, 512, 1024],
                     'learningRate'         : [0.01, 0.001, 0.0001],
-                    'update_target'        : [100, 500, 1000]
                     }
 
     save_path = os.path.join(save_root_dir, env, mode)

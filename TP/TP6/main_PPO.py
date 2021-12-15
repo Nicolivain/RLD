@@ -10,7 +10,7 @@ matplotlib.use("Qt5agg")
 
 if __name__ == '__main__':
 
-    mode = ['PPO', 'ClippedPPO', 'PPO_noDKL'][1]
+    mode = ['PPO', 'ClippedPPO', 'PPO_noDKL'][0]
     env, config, outdir, logger = init('Training/configs/config_random_lunar.yaml', mode)
 
     torch.manual_seed(config['seed'])
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     episode_count = config["nbEpisodes"]
 
     agent = {
-             'PPO'          : AdaptativePPO(env, config, layers=[256], k=4, memory_size=64, batch_size=None, use_dkl=True, reversed_dkl=False),
+             'PPO'          : AdaptativePPO(env, config, layers=[256], k=4, memory_size=1024, batch_size=None, use_dkl=True, reversed_dkl=False),
              'ClippedPPO'   : ClippedPPO(env, config, layers=[256], k=4, memory_size=64, batch_size=None),
              'PPO_noDKL'    : AdaptativePPO(env, config, layers=[256], k=10, memory_size=100, batch_size=100, use_dkl=False)
              }[mode]
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         if i % freqTest == nbTest and i > freqTest:
             print("End of test, mean reward=", mean / nbTest)
             itest += 1
-            logger.direct_write("rewardTest", mean / nbTest, itest)
+            logger.direct_write("Reward Test", mean / nbTest, itest)
             agent.test = False
 
         # C'est le moment de sauver le modèle

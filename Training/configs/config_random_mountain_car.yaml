@@ -10,6 +10,7 @@ fromFile: null
 nbEpisodes: 10000
 maxLengthTest: 500                                                                    # Longueur maxi des trajectoires en Test
 maxLengthTrain: 300
+startEvents: 1000
 exploMode: 0                                                                          # Mode d'exploration. 0 = epsilon-greedy (les autres a regarder je sais plus)
 explo: 0.1                                                                            # coefficient d'exploration initial
 decay: 0.99999                                                                         # a la fin de chaque trajectoire, le coefficient d'explo est multiplié par ce facteur
