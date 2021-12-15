@@ -10,12 +10,12 @@ Course website: https://dac.lip6.fr/master/rld-2021-2022/
 - Deep Q Learning (minDQN), DuelingDQN
 - Actor Critic A2C
 - Trusted Region Actor Critic PPO and Clipped PPO
-- DDPG (in progress)
+- DDPG
+- SAC, Adaptative Temperature SAC
 
 ### Environnement:
 Grid World, Cartpole, Lunar Lander, Pendulum
     
-### Ressources: 
-- Minimal RL from seungeunrho: https://github.com/seungeunrho/minimalRL/
+### Ressources:
 - Reinforcement Learning with Pytorch from p-christ: https://github.com/p-christ/Deep-Reinforcement-Learning-Algorithms-with-PyTorch/
 - Lilian Weng's blog on Policy Algorithm: https://lilianweng.github.io/lil-log/2018/04/08/policy-gradient-algorithms.html 
