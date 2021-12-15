@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
             ob = torch.from_numpy(new_ob)
             action = agent.act(ob)
-            new_ob, reward, done, _ = env.step(action.numpy()) #passage en numpy ici pour la compatibilité gym
+            new_ob, reward, done, _ = env.step(action.numpy())  # passage en numpy ici pour la compatibilité gym
             new_ob = agent.featureExtractor.getFeatures(new_ob)
 
             j += 1

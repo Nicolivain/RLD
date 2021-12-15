@@ -9,7 +9,7 @@ matplotlib.use("Qt5agg")
 
 if __name__ == '__main__':
 
-    mode = ['SAC'][0]
+    mode = ['SAC', 'AdaptTempSAC'][0]
     env, config, outdir, logger = init('Training/configs/config_random_pendulum.yaml', mode)
 
     torch.manual_seed(config['seed'])
@@ -21,7 +21,8 @@ if __name__ == '__main__':
     episode_count = config["nbEpisodes"]
 
     agent = {
-             'SAC'          : SAC(env, config, batch_per_learn=3, layers=[20, 20], memory_size=10000, batch_size=1024),
+             'SAC'          : SAC(env, config, batch_per_learn=3, layers=[30, 30], memory_size=100000, batch_size=1024),
+             'AdaptTempSAC' : SAC(env, config, batch_per_learn=3, layers=[20, 20], memory_size=100000, batch_size=1024, alpha_learning_rate=0.001),
              }[mode]
 
     rsum = 0
@@ -30,7 +31,8 @@ if __name__ == '__main__':
     itest = 0
     reward = 0
     done = False
-    policy_loss, value_loss = None, None
+    has_learnt = False
+    result_dict = {}
     for i in range(episode_count):
         checkConfUpdate(outdir, config)
 
@@ -54,7 +56,7 @@ if __name__ == '__main__':
         if i % freqTest == nbTest and i > freqTest:
             print("End of test, mean reward=", mean / nbTest)
             itest += 1
-            logger.direct_write("rewardTest", mean / nbTest, itest)
+            logger.direct_write("Reward Test", mean / nbTest, itest)
             agent.test = False
 
         # C'est le moment de sauver le modèle
@@ -72,7 +74,7 @@ if __name__ == '__main__':
 
             ob = torch.from_numpy(new_ob)
             action = agent.act(ob)
-            new_ob, reward, done, _ = env.step(action)
+            new_ob, reward, done, _ = env.step(action.numpy())
             new_ob = agent.featureExtractor.getFeatures(new_ob)
 
             j += 1
@@ -94,14 +96,14 @@ if __name__ == '__main__':
             rsum += reward
 
             if agent.time_to_learn():
-                value_loss, policy_loss = agent.learn(done)
-            if done and policy_loss is not None:
-                print(
-                    'Episode {:5d} Reward: {:3.1f} #Action: {:4d} Policy Loss: {:1.6f} Value Loss: {:1.6f}'.format(
-                        i, rsum, j, policy_loss, value_loss))
-                logger.direct_write("reward", rsum, i)
-                logger.direct_write('average policy loss', policy_loss, i)
-                logger.direct_write('value loss', value_loss, i)
+                result_dict = agent.learn(done)
+                has_learnt = True
+            if done and has_learnt:
+                #rsum = rsum[0]
+                print('Episode {:5d} Reward: {:3.1f} #Action: {:4d}'.format(i, rsum, j))
+                logger.direct_write("Reward", rsum, i)
+                for k, v in result_dict.items():
+                    logger.direct_write(k, v, i)
                 agent.nbEvents = 0
                 mean += rsum
                 rsum = 0
