@@ -83,7 +83,7 @@ class SAC(Agent):
         self.optim_policy = torch.optim.Adam(params=self.policy.parameters(), lr=self.p_lr)
 
         # setup temperature
-        self.alpha = torch.Tensor([alpha])
+        self.alpha = torch.Tensor([alpha]).log()
         self.alpha.requires_grad = True
         self.alpha_lr = alpha_learning_rate
         if self.alpha_lr is not None:
@@ -171,7 +171,7 @@ class SAC(Agent):
 
     def _update_policy(self, b_obs, b_action, b_reward, b_new, b_done):
         actions, action_log_prob = self.policy(b_obs, training=True)
-        entropy = - self.alpha * action_log_prob
+        entropy = - self.alpha.exp() * action_log_prob
 
         q1_val = self.q1(b_obs, actions)
         q2_val = self.q2(b_obs, actions)
@@ -184,7 +184,7 @@ class SAC(Agent):
         alpha_loss = torch.zeros(1)
         if self.alpha_lr is not None:
             self.optim_alpha.zero_grad()
-            alpha_loss = -(self.alpha * (action_log_prob.detach() - 1)).mean()
+            alpha_loss = -(self.alpha.exp() * (action_log_prob.detach() - 1)).mean()
             alpha_loss.backward()
             self.optim_alpha.step()
 
@@ -203,7 +203,7 @@ class SAC(Agent):
     def _compute_objective(self, b_reward, b_new, b_done):
         with torch.no_grad():
             next_action, log_prob = self.policy(b_new, training=True)
-            entropy = - self.alpha * log_prob
+            entropy = - self.alpha.exp() * log_prob
 
             q1_val = self.target_q1(b_new, next_action)
             q2_val = self.target_q2(b_new, next_action)
