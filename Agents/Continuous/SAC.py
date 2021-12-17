@@ -1,213 +1,221 @@
-from copy import deepcopy
-
+import gym
 import torch
-from torch.distributions import Normal, Uniform
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torch.distributions import Normal
+import numpy as np
+import collections, random
 
 from Agents.Agent import Agent
-from Structure.Memory import Memory
-from Tools.core import NN
 
 
-class QNet(torch.nn.Module):
-    def __init__(self, in_size, action_space_size, layers, final_activation=None, activation=torch.relu, dropout=0):
-        super().__init__()
-        self.pre_state   = torch.nn.Linear(in_size, 64)
-        self.pre_action  = torch.nn.Linear(action_space_size, 64)
-        self.q_net       = NN(128, 1, layers=layers, final_activation=final_activation, activation=activation, dropout=dropout)
-
-    def forward(self, obs, action):
-        # independant preprocessing
-        p_obs = self.pre_state(obs)
-        p_act = self.pre_action(action)
-
-        # Concat
-        ipt = torch.cat([p_obs, p_act], dim=-1)
-        return self.q_net(ipt)
+# Hyperparameters
+lr_pi = 0.0005
+lr_q = 0.001
+init_alpha = 0.01
+gamma = 0.98
+batch_size = 32
+buffer_limit = 50000
+tau = 0.01  # for target network soft update
+target_entropy = -1.0  # for automated alpha update
+lr_alpha = 0.001  # for automated alpha update
 
 
-class PolicyNet(torch.nn.Module):
-    def __init__(self, in_size, layers=None, final_activation=None, activation=torch.relu, dropout=0):
-        super().__init__()
+class ReplayBuffer():
+    def __init__(self):
+        self.buffer = collections.deque(maxlen=buffer_limit)
 
-        if layers is None:
-            layers = [30]
+    def put(self, transition):
+        self.buffer.append(transition)
 
-        self.encode        = NN(in_size, layers[-1], layers=layers, final_activation=final_activation, activation=activation, dropout=dropout)
-        self.softplus      = torch.nn.Softplus()
-        self.fc_mu         = torch.nn.Linear(layers[-1], 1)
-        self.fc_std        = torch.nn.Linear(layers[-1], 1)
+    def sample(self, n):
+        mini_batch = random.sample(self.buffer, n)
+        s_lst, a_lst, r_lst, s_prime_lst, done_mask_lst = [], [], [], [], []
 
-    def forward(self, obs, training=False):
-        # Here the policy computes a distribution
-        h    = self.encode(obs)
-        mu   = self.fc_mu(h)
-        std  = self.softplus(self.fc_std(h))
+        for transition in mini_batch:
+            s, a, r, s_prime, done = transition['obs'], transition['action'], transition['reward'],  transition['new_obs'], transition['done']
+            s_lst.append(s)
+            a_lst.append([a])
+            r_lst.append([r])
+            s_prime_lst.append(s_prime)
+            done_mask = 0.0 if done else 1.0
+            done_mask_lst.append([done_mask])
 
-        # Action + first clamping
+        return torch.vstack(s_lst), torch.tensor(a_lst), \
+               torch.tensor(r_lst), torch.vstack(s_prime_lst), \
+               torch.tensor(done_mask_lst, dtype=torch.float)
+
+    def size(self):
+        return len(self.buffer)
+
+
+class PolicyNet(nn.Module):
+    def __init__(self, learning_rate):
+        super(PolicyNet, self).__init__()
+        self.fc1 = nn.Linear(3, 128)
+        self.fc_mu = nn.Linear(128, 1)
+        self.fc_std = nn.Linear(128, 1)
+        self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
+
+        self.log_alpha = torch.tensor(np.log(init_alpha))
+        self.log_alpha.requires_grad = True
+        self.log_alpha_optimizer = optim.Adam([self.log_alpha], lr=lr_alpha)
+
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        mu = self.fc_mu(x)
+        std = F.softplus(self.fc_std(x))
         dist = Normal(mu, std)
-        act  = dist.rsample()
-        real_action = torch.tanh(act)
-
-        # Computing the log prob, usefull for the training
-        real_log_prob = None
-        if training:
-            log_prob = dist.log_prob(act)
-            real_log_prob = log_prob - torch.log(1 - torch.tanh(act).pow(2) + 1e-7)
+        action = dist.rsample()
+        log_prob = dist.log_prob(action)
+        real_action = torch.tanh(action)
+        real_log_prob = log_prob - torch.log(1 - torch.tanh(action).pow(2) + 1e-7)
         return real_action, real_log_prob
+
+    def train_net(self, q1, q2, mini_batch):
+        s, _, _, _, _ = mini_batch
+        a, log_prob = self.forward(s)
+        entropy = -self.log_alpha.exp() * log_prob
+
+        q1_val, q2_val = q1(s, a), q2(s, a)
+        q1_q2 = torch.cat([q1_val, q2_val], dim=1)
+        min_q = torch.min(q1_q2, 1, keepdim=True)[0]
+
+        loss = -min_q - entropy  # for gradient ascent
+        self.optimizer.zero_grad()
+        loss.mean().backward()
+        self.optimizer.step()
+
+        self.log_alpha_optimizer.zero_grad()
+        alpha_loss = -(self.log_alpha.exp() * (log_prob + target_entropy).detach()).mean()
+        alpha_loss.backward()
+        self.log_alpha_optimizer.step()
+
+
+class QNet(nn.Module):
+    def __init__(self, learning_rate):
+        super(QNet, self).__init__()
+        self.fc_s = nn.Linear(3, 64)
+        self.fc_a = nn.Linear(1, 64)
+        self.fc_cat = nn.Linear(128, 32)
+        self.fc_out = nn.Linear(32, 1)
+        self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
+
+    def forward(self, x, a):
+        h1 = F.relu(self.fc_s(x))
+        h2 = F.relu(self.fc_a(a))
+        cat = torch.cat([h1, h2], dim=1)
+        q = F.relu(self.fc_cat(cat))
+        q = self.fc_out(q)
+        return q
+
+    def train_net(self, target, mini_batch):
+        s, a, r, s_prime, done = mini_batch
+        loss = F.smooth_l1_loss(self.forward(s, a), target)
+        self.optimizer.zero_grad()
+        loss.mean().backward()
+        self.optimizer.step()
+
+    def soft_update(self, net_target):
+        for param_target, param in zip(net_target.parameters(), self.parameters()):
+            param_target.data.copy_(param_target.data * (1.0 - tau) + param.data * tau)
+
+
+def calc_target(pi, q1, q2, mini_batch):
+    s, a, r, s_prime, done = mini_batch
+
+    with torch.no_grad():
+        a_prime, log_prob = pi(s_prime)
+        entropy = -pi.log_alpha.exp() * log_prob
+        q1_val, q2_val = q1(s_prime, a_prime), q2(s_prime, a_prime)
+        q1_q2 = torch.cat([q1_val, q2_val], dim=1)
+        min_q = torch.min(q1_q2, 1, keepdim=True)[0]
+        target = r + gamma * done * (min_q + entropy)
+
+    return target
+
+
+def main():
+    env = gym.make('Pendulum-v0')
+    memory = ReplayBuffer()
+    q1, q2, q1_target, q2_target = QNet(lr_q), QNet(lr_q), QNet(lr_q), QNet(lr_q)
+    pi = PolicyNet(lr_pi)
+
+    q1_target.load_state_dict(q1.state_dict())
+    q2_target.load_state_dict(q2.state_dict())
+
+    score = 0.0
+    print_interval = 20
+
+    for n_epi in range(10000):
+        s = env.reset()
+        done = False
+
+        while not done:
+            a, log_prob = pi(torch.from_numpy(s).float())
+            s_prime, r, done, info = env.step([2.0 * a.item()])
+            memory.put((s, a.item(), r / 10.0, s_prime, done))
+            score += r
+            s = s_prime
+
+        if memory.size() > 1000:
+            for i in range(20):
+                mini_batch = memory.sample(batch_size)
+                td_target = calc_target(pi, q1_target, q2_target, mini_batch)
+                q1.train_net(td_target, mini_batch)
+                q2.train_net(td_target, mini_batch)
+                entropy = pi.train_net(q1, q2, mini_batch)
+                q1.soft_update(q1_target)
+                q2.soft_update(q2_target)
+
+        if n_epi % print_interval == 0 and n_epi != 0:
+            print("# of episode :{}, avg score : {:.1f} alpha:{:.4f}".format(n_epi, score / print_interval,
+                                                                             pi.log_alpha.exp()))
+            score = 0.0
+
+    env.close()
 
 
 class SAC(Agent):
-    def __init__(self, env, opt, layers, batch_per_learn=1, loss='smoothL1', batch_size=64, memory_size=1024, alpha=0.01, alpha_learning_rate=None, **kwargs):
-        super().__init__(env, opt )
+    def __init__(self, env, opt):
+        super().__init__(env, opt)
 
         self.featureExtractor = opt.featExtractor(env)
-        self.loss = torch.nn.SmoothL1Loss() if loss == 'smoothL1' else torch.nn.MSELoss()
 
-        self.p_lr = opt.p_learningRate
-        self.q_lr = opt.q_learningRate
+        self.memory = ReplayBuffer()
 
-        # setup q nets:
-        self.q1 = QNet(in_size=self.featureExtractor.outSize, action_space_size=len(self.action_space.low), layers=layers, final_activation=None)
-        self.q2 = QNet(in_size=self.featureExtractor.outSize, action_space_size=len(self.action_space.low), layers=layers, final_activation=None)
+        self.q1, self.q2                = QNet(lr_q), QNet(lr_q)
+        self.q1_target, self.q2_target  = QNet(lr_q), QNet(lr_q)
 
-        self.optim_q1  = torch.optim.Adam(params=self.q1.parameters(), lr=self.q_lr)
-        self.optim_q2  = torch.optim.Adam(params=self.q2.parameters(), lr=self.q_lr)
+        self.q1_target.load_state_dict(self.q1.state_dict())
+        self.q2_target.load_state_dict(self.q2.state_dict())
 
-        # setup target q nets:
-        self.target_q1 = deepcopy(self.q1)
-        self.target_q2 = deepcopy(self.q2)
-        self.rho = opt.rho
-
-        # setup policy net:
-        self.policy = PolicyNet(self.featureExtractor.outSize, layers, final_activation=None)
-        self.optim_policy = torch.optim.Adam(params=self.policy.parameters(), lr=self.p_lr)
-
-        # setup temperature
-        self.alpha = torch.Tensor([alpha]).log()
-        self.alpha.requires_grad = True
-        self.alpha_lr = alpha_learning_rate
-        if self.alpha_lr is not None:
-            self.optim_alpha = torch.optim.Adam(params=[self.alpha], lr=self.alpha_lr)
-
-        # setup memory
-        self.memory = Memory(mem_size=memory_size)
-        self.batch_size = batch_size
-        self.memory_size = memory_size
-        self.batch_per_learn = batch_per_learn
-
-        # setup optim rates
-        self.freq_optim = opt.freqOptim
-        self.n_events = 0
-        self.startEvents = opt.startEvents
-
-        # action clamping boundaries
-        self.min = torch.Tensor(self.action_space.low)
-        self.max = torch.Tensor(self.action_space.high)
-
-    def store(self, transition):
-        if not self.test:
-            self.memory.store(transition)
+        self.policy = PolicyNet(lr_pi)
 
     def act(self, obs):
-        if self.n_events < self.startEvents:
-            dist = Uniform(self.min, self.max)
-            return dist.sample()
         with torch.no_grad():
-            a, _ = self.policy(obs)
-        return torch.clamp(a, self.min, self.max).view(-1)
+            act, _ = self.policy(obs)
+        return 2.0 * act[0]
 
-    def time_to_learn(self):
-        self.n_events += 1
-        if self.n_events % self.freq_optim != 0 or self.test:
-            return False
-        else:
+    def learn(self, obs):
+        for i in range(20):
+            mini_batch = self.memory.sample(batch_size)
+            td_target = calc_target(self.policy, self.q1_target, self.q2_target, mini_batch)
+            self.q1.train_net(td_target, mini_batch)
+            self.q2.train_net(td_target, mini_batch)
+            # entropy = self.policy.train_net(self.q1, self.q2, mini_batch)
+            self.q1.soft_update(self.q1_target)
+            self.q2.soft_update(self.q2_target)
+
+        return {}
+
+    def time_to_learn(self, done):
+        if done and self.memory.size() > 1000:
             return True
+        else:
+            return False
 
-    def learn(self, done):
-        mean_q1loss, mean_q2loss, mean_ploss, mean_aloss = 0, 0, 0, 0
-        for k in range(self.batch_per_learn):
-            q1loss, q2loss, ploss, aloss = self._train_batch()
-            mean_q1loss += q1loss
-            mean_q2loss += q2loss
-            mean_ploss += ploss
-            mean_aloss += aloss
-        return {'Q1 Loss': mean_q1loss / self.batch_per_learn, 'Q2 Loss': mean_q2loss / self.batch_per_learn, 'Policy Loss': mean_ploss / self.batch_per_learn, 'Alpha Loss': mean_aloss / self.batch_per_learn}
+    def store(self, transition):
+        self.memory.put(transition)
 
-    def _train_batch(self):
-        batches = self.memory.sample_batch(batch_size=self.batch_size)
-
-        b_obs = batches['obs']
-        b_action = batches['action'].unsqueeze(-1)
-        b_reward = batches['reward']
-        b_new = batches['new_obs']
-        b_done = batches['done']
-
-        # update q net
-        q1_loss, q2_loss = self._update_q(b_obs, b_action, b_reward, b_new, b_done)
-
-        # update policy
-        p_loss, alpha_loss = self._update_policy(b_obs, b_action, b_reward, b_new, b_done)
-
-        # update target network
-        self._update_target()
-        return q1_loss, q2_loss, p_loss, alpha_loss
-
-    def _update_q(self, b_obs, b_action, b_reward, b_new, b_done):
-        target = self._compute_objective(b_reward, b_new, b_done)
-
-        # updating q1
-        q1_loss = self.loss(self.q1(b_obs, b_action), target)
-        self.optim_q1.zero_grad()
-        q1_loss.backward()
-        self.optim_q1.step()
-
-        # updating q2
-        q2_loss = self.loss(self.q1(b_obs, b_action), target)
-        self.optim_q2.zero_grad()
-        q2_loss.backward()
-        self.optim_q2.step()
-
-        return q1_loss.item(), q2_loss.item()
-
-    def _update_policy(self, b_obs, b_action, b_reward, b_new, b_done):
-        actions, action_log_prob = self.policy(b_obs, training=True)
-        entropy = - self.alpha.exp() * action_log_prob
-
-        q1_val = self.q1(b_obs, actions)
-        q2_val = self.q2(b_obs, actions)
-        yv = - (torch.min(torch.cat([q1_val, q2_val], dim=1), dim=1, keepdim=True)[0] + entropy).mean()
-
-        self.optim_policy.zero_grad()
-        yv.backward()
-        self.optim_policy.step()
-
-        alpha_loss = torch.zeros(1)
-        if self.alpha_lr is not None:
-            self.optim_alpha.zero_grad()
-            alpha_loss = -(self.alpha.exp() * (action_log_prob.detach() - 1)).mean()
-            alpha_loss.backward()
-            self.optim_alpha.step()
-
-        return yv.item(), alpha_loss.item()
-
-    def _update_target(self):
-        with torch.no_grad():
-            for target_p, net_p in zip(self.target_q1.parameters(), self.q1.parameters()):
-                new_p = self.rho * target_p + (1 - self.rho) * net_p
-                target_p.copy_(new_p)
-
-            for target_p, net_p in zip(self.target_q2.parameters(), self.q2.parameters()):
-                new_p = self.rho * target_p + (1 - self.rho) * net_p
-                target_p.copy_(new_p)
-
-    def _compute_objective(self, b_reward, b_new, b_done):
-        with torch.no_grad():
-            next_action, log_prob = self.policy(b_new, training=True)
-            entropy = - self.alpha.exp() * log_prob
-
-            q1_val = self.target_q1(b_new, next_action)
-            q2_val = self.target_q2(b_new, next_action)
-            v = torch.min(torch.cat([q1_val, q2_val], dim=1), dim=1, keepdim=True)[0] + entropy
-
-        td = b_reward + self.discount * v * (~b_done).float()
-        return td

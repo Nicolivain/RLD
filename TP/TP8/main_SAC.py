@@ -9,7 +9,7 @@ matplotlib.use("Qt5agg")
 
 if __name__ == '__main__':
 
-    mode = ['SAC', 'AdaptTempSAC'][1]
+    mode = ['SAC', 'AdaptTempSAC'][0]
     env, config, outdir, logger = init('Training/configs/config_random_pendulum.yaml', mode)
 
     torch.manual_seed(config['seed'])
@@ -21,8 +21,7 @@ if __name__ == '__main__':
     episode_count = config["nbEpisodes"]
 
     agent = {
-             'SAC'          : SAC(env, config, batch_per_learn=10, layers=[256], memory_size=100000, batch_size=1000),
-             'AdaptTempSAC' : SAC(env, config, batch_per_learn=10, layers=[256], memory_size=100000, batch_size=1000, alpha_learning_rate=0.001),
+             'SAC'          : SAC(env, config)
              }[mode]
 
     rsum = 0
@@ -95,7 +94,7 @@ if __name__ == '__main__':
             agent.store(transition)
             rsum += reward
 
-            if agent.time_to_learn():
+            if agent.time_to_learn(done):
                 result_dict = agent.learn(done)
                 has_learnt = True
             if done and has_learnt:
