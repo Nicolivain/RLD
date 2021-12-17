@@ -82,7 +82,7 @@ class Memory:
     #        ind = dict[transition]
     #    return ind
 
-    def store(self, transition):
+    def put(self, transition):
         if self.prior:
             p = self.tree.max_p
             if not p:
@@ -126,12 +126,20 @@ class Memory:
             return mask, 0,  self.mem[mask]
 
     def sample_batch(self, batch_size, n_batch=1):
-        _, _, experiences = self.sample(n_batch * batch_size)
-        batches = {}
-        for k in experiences[0].keys():
-            batches[k] = torch.from_numpy(np.vstack([e[k] for e in experiences])).reshape(n_batch, batch_size, -1)
-            batches[k] = torch.squeeze(batches[k])
-        return batches
+        _, _, mini_batch = self.sample(batch_size)
+        s_lst, a_lst, r_lst, s_prime_lst, done_mask_lst = [], [], [], [], []
+
+        for transition in mini_batch:
+            s_lst.append(transition['obs'])
+            a_lst.append([transition['action']])
+            r_lst.append([transition['reward']])
+            s_prime_lst.append(transition['new_obs'])
+            done_mask = 0.0 if transition['done'] else 1.0
+            done_mask_lst.append([done_mask])
+
+        return torch.tensor(s_lst, dtype=torch.float), torch.tensor(a_lst, dtype=torch.float), \
+               torch.tensor(r_lst, dtype=torch.float), torch.tensor(s_prime_lst, dtype=torch.float), \
+               torch.tensor(done_mask_lst, dtype=torch.float)
 
     def update(self, idx, tderr):
         if self.prior:

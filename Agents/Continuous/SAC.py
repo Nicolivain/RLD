@@ -1,4 +1,5 @@
 import gym
+import numpy.random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,8 +8,7 @@ from torch.distributions import Normal
 import numpy as np
 import collections, random
 
-from Agents.Agent import Agent
-
+from Structure.Memory import Memory
 
 # Hyperparameters
 lr_pi = 0.0005
@@ -34,7 +34,7 @@ class ReplayBuffer():
         s_lst, a_lst, r_lst, s_prime_lst, done_mask_lst = [], [], [], [], []
 
         for transition in mini_batch:
-            s, a, r, s_prime, done = transition['obs'], transition['action'], transition['reward'],  transition['new_obs'], transition['done']
+            s, a, r, s_prime, done = transition
             s_lst.append(s)
             a_lst.append([a])
             r_lst.append([r])
@@ -42,8 +42,8 @@ class ReplayBuffer():
             done_mask = 0.0 if done else 1.0
             done_mask_lst.append([done_mask])
 
-        return torch.vstack(s_lst), torch.tensor(a_lst), \
-               torch.tensor(r_lst), torch.vstack(s_prime_lst), \
+        return torch.tensor(s_lst, dtype=torch.float), torch.tensor(a_lst, dtype=torch.float), \
+               torch.tensor(r_lst, dtype=torch.float), torch.tensor(s_prime_lst, dtype=torch.float), \
                torch.tensor(done_mask_lst, dtype=torch.float)
 
     def size(self):
@@ -137,8 +137,12 @@ def calc_target(pi, q1, q2, mini_batch):
 
 
 def main():
-    env = gym.make('Pendulum-v0')
-    memory = ReplayBuffer()
+    torch.manual_seed(1)
+    numpy.random.seed(1)
+    g
+
+    env = gym.make('Pendulum-v1')
+    memory = Memory(buffer_limit)
     q1, q2, q1_target, q2_target = QNet(lr_q), QNet(lr_q), QNet(lr_q), QNet(lr_q)
     pi = PolicyNet(lr_pi)
 
@@ -155,13 +159,20 @@ def main():
         while not done:
             a, log_prob = pi(torch.from_numpy(s).float())
             s_prime, r, done, info = env.step([2.0 * a.item()])
-            memory.put((s, a.item(), r / 10.0, s_prime, done))
+            transition = {
+                'obs': s,
+                'action': a.item(),
+                'reward': r/10.0,
+                'new_obs': s_prime,
+                'done': done
+            }
+            memory.put(transition)
             score += r
             s = s_prime
 
-        if memory.size() > 1000:
+        if memory.nentities > 1000:
             for i in range(20):
-                mini_batch = memory.sample(batch_size)
+                mini_batch = memory.sample_batch(batch_size)
                 td_target = calc_target(pi, q1_target, q2_target, mini_batch)
                 q1.train_net(td_target, mini_batch)
                 q2.train_net(td_target, mini_batch)
@@ -177,30 +188,23 @@ def main():
     env.close()
 
 
-class SAC(Agent):
-    def __init__(self, env, opt):
-        super().__init__(env, opt)
-
-        self.featureExtractor = opt.featExtractor(env)
-
-        self.memory = ReplayBuffer()
-
-        self.q1, self.q2                = QNet(lr_q), QNet(lr_q)
-        self.q1_target, self.q2_target  = QNet(lr_q), QNet(lr_q)
+class SAC:
+    def __init__(self):
+        self.memory = Memory(buffer_limit)
+        self.q1, self.q2 = QNet(lr_q), QNet(lr_q)
+        self.q1_target, self.q2_target = QNet(lr_q), QNet(lr_q)
+        self.policy = PolicyNet(lr_pi)
 
         self.q1_target.load_state_dict(self.q1.state_dict())
         self.q2_target.load_state_dict(self.q2.state_dict())
 
-        self.policy = PolicyNet(lr_pi)
-
     def act(self, obs):
-        with torch.no_grad():
-            act, _ = self.policy(obs)
-        return 2.0 * act[0]
+        a, _ = self.policy(obs)
+        return a.item()
 
-    def learn(self, obs):
+    def learn(self, done):
         for i in range(20):
-            mini_batch = self.memory.sample(batch_size)
+            mini_batch = self.memory.sample_batch(batch_size)
             td_target = calc_target(self.policy, self.q1_target, self.q2_target, mini_batch)
             self.q1.train_net(td_target, mini_batch)
             self.q2.train_net(td_target, mini_batch)
@@ -208,10 +212,8 @@ class SAC(Agent):
             self.q1.soft_update(self.q1_target)
             self.q2.soft_update(self.q2_target)
 
-        return {}
-
     def time_to_learn(self, done):
-        if done and self.memory.size() > 1000:
+        if done and self.memory.nentities > 1000:
             return True
         else:
             return False
@@ -219,3 +221,6 @@ class SAC(Agent):
     def store(self, transition):
         self.memory.put(transition)
 
+
+if __name__ == '__main__':
+    main()
