@@ -136,63 +136,16 @@ def calc_target(pi, q1, q2, mini_batch):
     return target
 
 
-def main():
-    torch.manual_seed(1)
-    numpy.random.seed(1)
-    g
-
-    env = gym.make('Pendulum-v1')
-    memory = Memory(buffer_limit)
-    q1, q2, q1_target, q2_target = QNet(lr_q), QNet(lr_q), QNet(lr_q), QNet(lr_q)
-    pi = PolicyNet(lr_pi)
-
-    q1_target.load_state_dict(q1.state_dict())
-    q2_target.load_state_dict(q2.state_dict())
-
-    score = 0.0
-    print_interval = 20
-
-    for n_epi in range(10000):
-        s = env.reset()
-        done = False
-
-        while not done:
-            a, log_prob = pi(torch.from_numpy(s).float())
-            s_prime, r, done, info = env.step([2.0 * a.item()])
-            transition = {
-                'obs': s,
-                'action': a.item(),
-                'reward': r/10.0,
-                'new_obs': s_prime,
-                'done': done
-            }
-            memory.put(transition)
-            score += r
-            s = s_prime
-
-        if memory.nentities > 1000:
-            for i in range(20):
-                mini_batch = memory.sample_batch(batch_size)
-                td_target = calc_target(pi, q1_target, q2_target, mini_batch)
-                q1.train_net(td_target, mini_batch)
-                q2.train_net(td_target, mini_batch)
-                entropy = pi.train_net(q1, q2, mini_batch)
-                q1.soft_update(q1_target)
-                q2.soft_update(q2_target)
-
-        if n_epi % print_interval == 0 and n_epi != 0:
-            print("# of episode :{}, avg score : {:.1f} alpha:{:.4f}".format(n_epi, score / print_interval,
-                                                                             pi.log_alpha.exp()))
-            score = 0.0
-
-    env.close()
-
-
 class SAC:
     def __init__(self):
+
         self.memory = Memory(buffer_limit)
-        self.q1, self.q2 = QNet(lr_q), QNet(lr_q)
-        self.q1_target, self.q2_target = QNet(lr_q), QNet(lr_q)
+
+        self.q1 = QNet(lr_q)
+        self.q2 = QNet(lr_q)
+        self.q1_target = QNet(lr_q)
+        self.q2_target = QNet(lr_q)
+
         self.policy = PolicyNet(lr_pi)
 
         self.q1_target.load_state_dict(self.q1.state_dict())
@@ -205,10 +158,19 @@ class SAC:
     def learn(self, done):
         for i in range(20):
             mini_batch = self.memory.sample_batch(batch_size)
-            td_target = calc_target(self.policy, self.q1_target, self.q2_target, mini_batch)
-            self.q1.train_net(td_target, mini_batch)
-            self.q2.train_net(td_target, mini_batch)
-            # entropy = self.policy.train_net(self.q1, self.q2, mini_batch)
+
+            obs     = mini_batch['obs']
+            action  = mini_batch['action']
+            reward  = mini_batch['reward']
+            new_obs = mini_batch['new_obs']
+            done    = mini_batch['done']
+
+            t = (obs, action, reward, new_obs, done)
+            td_target = self._compute_objective(obs, action, reward, new_obs, done)
+            self.q1.train_net(td_target, t)
+            self.q2.train_net(td_target, t)
+            entropy = self.policy.train_net(self.q1, self.q2, t)
+
             self.q1.soft_update(self.q1_target)
             self.q2.soft_update(self.q2_target)
 
@@ -221,6 +183,23 @@ class SAC:
     def store(self, transition):
         self.memory.put(transition)
 
+    def _compute_objective(self, obs, action, reward, new_obs, done):
 
-if __name__ == '__main__':
-    main()
+        with torch.no_grad():
+            a_prime, log_prob = self.policy(new_obs)
+            entropy = -self.policy.log_alpha.exp() * log_prob
+            q1_val, q2_val = self.q1_target(new_obs, a_prime), self.q2_target(new_obs, a_prime)
+
+            q1_q2 = torch.cat([q1_val, q2_val], dim=1)
+            min_q = torch.min(q1_q2, 1, keepdim=True)[0]
+            target = reward + gamma * done * (min_q + entropy)
+
+        return target
+
+    def _update_target(self):
+        for param_target, param in zip(self.q1_target.parameters(), self.q1.parameters()):
+            param_target.data.copy_(param_target.data * (1.0 - tau) + param.data * tau)
+
+        for param_target, param in zip(self.q2_target.parameters(), self.q2.parameters()):
+            param_target.data.copy_(param_target.data * (1.0 - tau) + param.data * tau)
+

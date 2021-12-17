@@ -137,9 +137,10 @@ class Memory:
             done_mask = 0.0 if transition['done'] else 1.0
             done_mask_lst.append([done_mask])
 
-        return torch.tensor(s_lst, dtype=torch.float), torch.tensor(a_lst, dtype=torch.float), \
-               torch.tensor(r_lst, dtype=torch.float), torch.tensor(s_prime_lst, dtype=torch.float), \
-               torch.tensor(done_mask_lst, dtype=torch.float)
+        dct = {'obs': torch.tensor(s_lst, dtype=torch.float), 'action': torch.tensor(a_lst, dtype=torch.float),
+               'reward': torch.tensor(r_lst, dtype=torch.float), 'new_obs': torch.tensor(s_prime_lst, dtype=torch.float),
+               'done': torch.tensor(done_mask_lst, dtype=torch.float)}
+        return dct
 
     def update(self, idx, tderr):
         if self.prior:

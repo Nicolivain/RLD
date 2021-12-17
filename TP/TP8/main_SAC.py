@@ -25,11 +25,11 @@ if __name__ == '__main__':
         done = False
 
         while not done:
-            a = agent.act(torch.from_numpy(s).float())
-            s_prime, r, done, info = env.step([2.0 * a])
+            a, log = agent.policy(torch.from_numpy(s).float())
+            s_prime, r, done, info = env.step([2.0 * a.item()])
             transition = {
                 'obs': s,
-                'action': a,
+                'action': a.item(),
                 'reward': r / 10.0,
                 'new_obs': s_prime,
                 'done': done
@@ -38,11 +38,13 @@ if __name__ == '__main__':
             score += r
             s = s_prime
 
-        if agent.memory.nentities > 1000:
+        if agent.time_to_learn(done):
             agent.learn(done)
 
         if n_epi % print_interval == 0 and n_epi != 0:
-            print("# of episode :{}, avg score : {:.1f}".format(n_epi, score / print_interval))
+            if n_epi % print_interval == 0 and n_epi != 0:
+                print("# of episode :{}, avg score : {:.1f} alpha:{:.4f}".format(n_epi, score / print_interval,
+                                                                                 agent.policy.log_alpha.exp()))
             score = 0.0
 
     env.close()
