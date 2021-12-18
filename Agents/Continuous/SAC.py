@@ -41,25 +41,6 @@ class PolicyNet(nn.Module):
         real_log_prob = log_prob - torch.log(1 - torch.tanh(action).pow(2) + 1e-7)
         return real_action, real_log_prob
 
-    def train_net(self, q1, q2, mini_batch):
-        s, _, _, _, _ = mini_batch
-        a, log_prob = self.forward(s)
-        entropy = -self.log_alpha.exp() * log_prob
-
-        q1_val, q2_val = q1(s, a), q2(s, a)
-        q1_q2 = torch.cat([q1_val, q2_val], dim=1)
-        min_q = torch.min(q1_q2, 1, keepdim=True)[0]
-
-        loss = -min_q - entropy  # for gradient ascent
-        self.optimizer.zero_grad()
-        loss.mean().backward()
-        self.optimizer.step()
-
-        self.log_alpha_optimizer.zero_grad()
-        alpha_loss = -(self.log_alpha.exp() * (log_prob + target_entropy).detach()).mean()
-        alpha_loss.backward()
-        self.log_alpha_optimizer.step()
-
 
 class QNet(nn.Module):
     def __init__(self):
@@ -82,22 +63,26 @@ class SAC(Agent):
     def __init__(self, env, opt):
         super().__init__(env, opt)
 
+        # setup memory
         self.memory = Memory(buffer_limit)
 
+        # setup Q networks
         self.q1 = QNet()
         self.q2 = QNet()
         self.optim_q1 = optim.Adam(self.q1.parameters(), lr=lr_q)
         self.optim_q2 = optim.Adam(self.q2.parameters(), lr=lr_q)
 
+        # setup Q target networks
         self.q1_target = QNet()
         self.q2_target = QNet()
-
-        self.policy = PolicyNet()
-        self.optim_policy = optim.Adam(self.policy.parameters(), lr=lr_pi)
-
         self.q1_target.load_state_dict(self.q1.state_dict())
         self.q2_target.load_state_dict(self.q2.state_dict())
 
+        # setup Policy network
+        self.policy = PolicyNet()
+        self.optim_policy = optim.Adam(self.policy.parameters(), lr=lr_pi)
+
+        # setup alpha tuning
         self.log_alpha = torch.tensor(np.log(init_alpha))
         self.log_alpha.requires_grad = True
         self.log_alpha_optimizer = optim.Adam([self.log_alpha], lr=lr_alpha)
@@ -116,7 +101,6 @@ class SAC(Agent):
             new_obs = mini_batch['new_obs']
             done    = mini_batch['done']
 
-            t = (obs, action, reward, new_obs, done)
             td_target = self._compute_objective(obs, action, reward, new_obs, done)
             self._update_qnet(td_target, obs, action)
             self._update_policy(obs)
