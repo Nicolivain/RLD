@@ -21,6 +21,7 @@ buffer_limit = 50000
 tau = 0.01  # for target network soft update
 target_entropy = -1.0  # for automated alpha update
 lr_alpha = 0.001  # for automated alpha update
+batch_per_learn = 20
 
 
 class PolicyNet(nn.Module):
@@ -92,7 +93,8 @@ class SAC(Agent):
         return a.item()
 
     def learn(self, done):
-        for i in range(20):
+        res = {'Policy Loss': 0, 'Q1 Loss': 0, 'Q2 Loss': 0, 'Entropy': 0, 'Alpha Loss':0}
+        for i in range(batch_per_learn):
             mini_batch = self.memory.sample_batch(batch_size)
 
             obs     = mini_batch['obs']
@@ -101,11 +103,20 @@ class SAC(Agent):
             new_obs = mini_batch['new_obs']
             done    = mini_batch['done']
 
-            td_target = self._compute_objective(obs, action, reward, new_obs, done)
-            self._update_qnet(td_target, obs, action)
-            self._update_policy(obs)
-
+            td_target               = self._compute_objective(obs, action, reward, new_obs, done)
+            lq1, lq2                = self._update_qnet(td_target, obs, action)
+            lp, alpha_loss, entropy = self._update_policy(obs)
             self._update_target()
+
+            res['Policy Loss']  += lp
+            res['Q1 Loss']      += lq1
+            res['Q2 Loss']      += lq2
+            res['Entropy']      += entropy
+            res['Alpha Loss']   += alpha_loss
+
+        res = {k: v/batch_per_learn for k, v in res.items()}
+        res['Alpha'] = self.log_alpha.exp()
+        return res
 
     def time_to_learn(self, done):
         if done and self.memory.nentities > 1000:
@@ -129,15 +140,16 @@ class SAC(Agent):
         return target
 
     def _update_qnet(self, target, obs, action):
-        loss = F.smooth_l1_loss(self.q1(obs, action), target)
+        lossq1 = F.smooth_l1_loss(self.q1(obs, action), target)
         self.optim_q1.zero_grad()
-        loss.mean().backward()
+        lossq1.mean().backward()
         self.optim_q1.step()
 
-        loss = F.smooth_l1_loss(self.q2(obs, action), target)
+        lossq2 = F.smooth_l1_loss(self.q2(obs, action), target)
         self.optim_q2.zero_grad()
-        loss.mean().backward()
+        lossq2.mean().backward()
         self.optim_q2.step()
+        return lossq1, lossq2
 
     def _update_policy(self, s):
         a, log_prob = self.policy(s)
@@ -156,6 +168,7 @@ class SAC(Agent):
         alpha_loss = -(self.log_alpha.exp() * (log_prob + target_entropy).detach()).mean()
         alpha_loss.backward()
         self.log_alpha_optimizer.step()
+        return loss, alpha_loss, entropy
 
     def _update_target(self):
         for param_target, param in zip(self.q1_target.parameters(), self.q1.parameters()):

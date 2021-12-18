@@ -13,15 +13,34 @@ if __name__ == '__main__':
     torch.manual_seed(1)
     numpy.random.seed(1)
 
-    env = gym.make('Pendulum-v1')
-    agent = SAC(env, load_yaml('Training/configs/config_random_pendulum.yaml'))
+    env, config, outdir, logger = init('Training/configs/config_random_pendulum.yaml', 'SAC', outdir=None, copy_config=False, launch_tb=False)
+    agent = SAC(env, config)
+
+    freqTest = config["freqTest"]
+    freqSave = config["freqSave"]
+    nbTest = config["nbTest"]
 
     score = 0.0
     print_interval = 20
-
+    itest = 0
+    mean = 0
     for n_epi in range(10000):
         s = env.reset()
         done = False
+
+        # C'est le moment de tester l'agent
+        if n_epi % freqTest == 0 and n_epi >= freqTest:  # Same as train for now
+            print("Test time! ")
+            itest = 0
+            mean = 0
+            agent.test = True
+
+        # On a fini cette session de test
+        if n_epi % freqTest == nbTest and n_epi > freqTest:
+            # print("End of test, mean reward=", mean / nbTest)
+            itest += 1
+            logger.direct_write("Reward Test", mean / nbTest, itest)
+            agent.test = False
 
         while not done:
             a, log = agent.policy(torch.from_numpy(s).float())
@@ -38,7 +57,9 @@ if __name__ == '__main__':
             s = s_prime
 
         if agent.time_to_learn(done):
-            agent.learn(done)
+            result_dict = agent.learn(done)
+            for k, v in result_dict.items():
+                logger.direct_write(k, v, n_epi)
 
         if n_epi % print_interval == 0 and n_epi != 0:
             if n_epi % print_interval == 0 and n_epi != 0:
