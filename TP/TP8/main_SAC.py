@@ -13,9 +13,8 @@ if __name__ == '__main__':
     torch.manual_seed(1)
     numpy.random.seed(1)
 
-    agent = SAC()
-
     env = gym.make('Pendulum-v1')
+    agent = SAC(env, load_yaml('Training/configs/config_random_pendulum.yaml'))
 
     score = 0.0
     print_interval = 20
@@ -44,7 +43,7 @@ if __name__ == '__main__':
         if n_epi % print_interval == 0 and n_epi != 0:
             if n_epi % print_interval == 0 and n_epi != 0:
                 print("# of episode :{}, avg score : {:.1f} alpha:{:.4f}".format(n_epi, score / print_interval,
-                                                                                 agent.policy.log_alpha.exp()))
+                                                                                 agent.log_alpha.exp()))
             score = 0.0
 
     env.close()
