@@ -10,9 +10,9 @@ from Agents.Agent import Agent
 
 
 class PolicyNet(nn.Module):
-    def __init__(self):
+    def __init__(self, input_size):
         super(PolicyNet, self).__init__()
-        self.fc1 = nn.Linear(3, 128)
+        self.fc1 = nn.Linear(input_size, 128)
         self.fc_mu = nn.Linear(128, 1)
         self.fc_std = nn.Linear(128, 1)
 
@@ -29,9 +29,9 @@ class PolicyNet(nn.Module):
 
 
 class QNet(nn.Module):
-    def __init__(self):
+    def __init__(self, state_input_size):
         super(QNet, self).__init__()
-        self.fc_s = nn.Linear(3, 64)
+        self.fc_s = nn.Linear(state_input_size, 64)
         self.fc_a = nn.Linear(1, 64)
         self.fc_cat = nn.Linear(128, 32)
         self.fc_out = nn.Linear(32, 1)
@@ -64,19 +64,19 @@ class SAC(Agent):
         self.memory = Memory(self.memory_size)
 
         # setup Q networks
-        self.q1 = QNet()
-        self.q2 = QNet()
+        self.q1 = QNet(state_input_size=self.featureExtractor.outSize)
+        self.q2 = QNet(state_input_size=self.featureExtractor.outSize)
         self.optim_q1 = optim.Adam(self.q1.parameters(), lr=self.lr_q)
         self.optim_q2 = optim.Adam(self.q2.parameters(), lr=self.lr_q)
 
         # setup Q target networks
-        self.q1_target = QNet()
-        self.q2_target = QNet()
+        self.q1_target = QNet(state_input_size=self.featureExtractor.outSize)
+        self.q2_target = QNet(state_input_size=self.featureExtractor.outSize)
         self.q1_target.load_state_dict(self.q1.state_dict())
         self.q2_target.load_state_dict(self.q2.state_dict())
 
         # setup Policy network
-        self.policy = PolicyNet()
+        self.policy = PolicyNet(input_size=self.featureExtractor.outSize)
         self.optim_policy = optim.Adam(self.policy.parameters(), lr=self.lr_policy)
 
         # setup alpha tuning

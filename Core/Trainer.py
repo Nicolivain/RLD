@@ -37,10 +37,8 @@ class Trainer:
         return score, n_action
 
     def _scale_action(self, a):
-        if self.action_rescale == 1:
-            return a
-        elif type(a) == int or type(a) == float:
-            return self.action_rescale * a
+        if type(a) == int or type(a) == float:
+            return [self.action_rescale * a]
         else:
             return [c * self.action_rescale for c in a]
 
