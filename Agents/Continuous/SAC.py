@@ -12,17 +12,13 @@ from Structure.Memory import Memory
 from Agents.Agent import Agent
 
 # Hyperparameters
+"""
 lr_pi = 0.0005
 lr_q = 0.001
-init_alpha = 0.01
 gamma = 0.98
-batch_size = 32
-buffer_limit = 50000
 tau = 0.01  # for target network soft update
-target_entropy = -1.0  # for automated alpha update
 lr_alpha = 0.001  # for automated alpha update
-batch_per_learn = 20
-
+"""
 
 class PolicyNet(nn.Module):
     def __init__(self):
@@ -61,17 +57,28 @@ class QNet(nn.Module):
 
 
 class SAC(Agent):
-    def __init__(self, env, opt):
+    def __init__(self, env, opt, batch_size=32, memory_size=50000, batch_per_learn=20, init_alpha=0.01, target_entropy=-1, lr_alpha=0.001, **kwargs):
         super().__init__(env, opt)
 
+        # parameters
+        self.batch_size         = batch_size
+        self.memory_size        = memory_size
+        self.batch_per_learn    = batch_per_learn
+        self.target_entropy     = target_entropy
+
+        self.lr_policy = opt.p_learningRate
+        self.lr_q      = opt.q_learningRate
+        self.lr_alpha  = lr_alpha
+        self.rho       = opt.rho
+
         # setup memory
-        self.memory = Memory(buffer_limit)
+        self.memory = Memory(self.memory_size)
 
         # setup Q networks
         self.q1 = QNet()
         self.q2 = QNet()
-        self.optim_q1 = optim.Adam(self.q1.parameters(), lr=lr_q)
-        self.optim_q2 = optim.Adam(self.q2.parameters(), lr=lr_q)
+        self.optim_q1 = optim.Adam(self.q1.parameters(), lr=self.lr_q)
+        self.optim_q2 = optim.Adam(self.q2.parameters(), lr=self.lr_q)
 
         # setup Q target networks
         self.q1_target = QNet()
@@ -81,21 +88,21 @@ class SAC(Agent):
 
         # setup Policy network
         self.policy = PolicyNet()
-        self.optim_policy = optim.Adam(self.policy.parameters(), lr=lr_pi)
+        self.optim_policy = optim.Adam(self.policy.parameters(), lr=self.lr_policy)
 
         # setup alpha tuning
         self.log_alpha = torch.tensor(np.log(init_alpha))
         self.log_alpha.requires_grad = True
-        self.log_alpha_optimizer = optim.Adam([self.log_alpha], lr=lr_alpha)
+        self.log_alpha_optimizer = optim.Adam([self.log_alpha], lr=self.lr_alpha)
 
     def act(self, obs):
         a, _ = self.policy(obs)
         return a.item()
 
     def learn(self, done):
-        res = {'Policy Loss': 0, 'Q1 Loss': 0, 'Q2 Loss': 0, 'Entropy': 0, 'Alpha Loss':0}
-        for i in range(batch_per_learn):
-            mini_batch = self.memory.sample_batch(batch_size)
+        res = {'Policy Loss': 0, 'Q1 Loss': 0, 'Q2 Loss': 0, 'Entropy': 0, 'Alpha Loss': 0}
+        for i in range(self.batch_per_learn):
+            mini_batch = self.memory.sample_batch(self.batch_size)
 
             obs     = mini_batch['obs']
             action  = mini_batch['action']
@@ -103,7 +110,7 @@ class SAC(Agent):
             new_obs = mini_batch['new_obs']
             done    = mini_batch['done']
 
-            td_target               = self._compute_objective(obs, action, reward, new_obs, done)
+            td_target               = self._compute_objective(reward, new_obs, done)
             lq1, lq2                = self._update_qnet(td_target, obs, action)
             lp, alpha_loss, entropy = self._update_policy(obs)
             self._update_target()
@@ -114,7 +121,7 @@ class SAC(Agent):
             res['Entropy']      += entropy
             res['Alpha Loss']   += alpha_loss
 
-        res = {k: v/batch_per_learn for k, v in res.items()}
+        res = {k: v/self.batch_per_learn for k, v in res.items()}
         res['Alpha'] = self.log_alpha.exp()
         return res
 
@@ -127,7 +134,7 @@ class SAC(Agent):
     def store(self, transition):
         self.memory.put(transition)
 
-    def _compute_objective(self, obs, action, reward, new_obs, done):
+    def _compute_objective(self, reward, new_obs, done):
         with torch.no_grad():
             a_prime, log_prob = self.policy(new_obs)
             entropy = -self.log_alpha.exp() * log_prob
@@ -135,7 +142,7 @@ class SAC(Agent):
 
             q1_q2 = torch.cat([q1_val, q2_val], dim=1)
             min_q = torch.min(q1_q2, 1, keepdim=True)[0]
-            target = reward + gamma * done * (min_q + entropy)
+            target = reward + self.discount * done * (min_q + entropy)
 
         return target
 
@@ -149,7 +156,7 @@ class SAC(Agent):
         self.optim_q2.zero_grad()
         lossq2.mean().backward()
         self.optim_q2.step()
-        return lossq1, lossq2
+        return lossq1.mean().item(), lossq2.mean().item()
 
     def _update_policy(self, s):
         a, log_prob = self.policy(s)
@@ -165,15 +172,15 @@ class SAC(Agent):
         self.optim_policy.step()
 
         self.log_alpha_optimizer.zero_grad()
-        alpha_loss = -(self.log_alpha.exp() * (log_prob + target_entropy).detach()).mean()
+        alpha_loss = -(self.log_alpha.exp() * (log_prob + self.target_entropy).detach()).mean()
         alpha_loss.backward()
         self.log_alpha_optimizer.step()
-        return loss, alpha_loss, entropy
+        return loss.mean().item(), alpha_loss.item(), entropy.mean().item()
 
     def _update_target(self):
         for param_target, param in zip(self.q1_target.parameters(), self.q1.parameters()):
-            param_target.data.copy_(param_target.data * (1.0 - tau) + param.data * tau)
+            param_target.data.copy_(param_target.data * (1.0 - self.rho) + param.data * self.rho)
 
         for param_target, param in zip(self.q2_target.parameters(), self.q2.parameters()):
-            param_target.data.copy_(param_target.data * (1.0 - tau) + param.data * tau)
+            param_target.data.copy_(param_target.data * (1.0 - self.rho) + param.data * self.rho)
 
