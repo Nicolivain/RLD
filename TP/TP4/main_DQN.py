@@ -14,8 +14,8 @@ matplotlib.use("TkAgg")
 
 if __name__ == '__main__':
 
-    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN', 'DuelingDQN'][0]
-    env, config, outdir, logger = init('Training/configs/config_random_lunar.yaml', mode)
+    mode = ['DQN', 'ReplayDQN', 'TargetDQN', 'minDQN', 'DuelingDQN'][4]
+    env, config, outdir, logger = init('Config/env_config/config_random_lunar.yaml', mode)
 
     torch.manual_seed(config['seed'])
     np.random.seed(config['seed'])
@@ -75,8 +75,6 @@ if __name__ == '__main__':
             env.render()
 
         new_ob = agent.featureExtractor.getFeatures(ob)
-
-        # TODO integrate this in Agent
 
         while True:
             if verbose:

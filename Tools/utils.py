@@ -178,6 +178,7 @@ def logRun(name, config, agent_object):
 
 
 def init(config_file, algoName, outdir=None, copy_config=True, launch_tb=True):
+
     config = load_yaml(config_file)
     env = gym.make(config["env"])
     if config.get("import") is not None:

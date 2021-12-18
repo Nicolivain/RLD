@@ -11,7 +11,6 @@ class DQN(Agent):
     def __init__(self, env, opt, layers, loss='smoothL1', memory_size=1, batch_size=100, **kwargs):
         super().__init__(env, opt)
 
-        # TODO: test one layer
         self.featureExtractor = opt.featExtractor(env)
         self.Q                = NN(self.featureExtractor.outSize, self.action_space.n, layers=layers, final_activation=torch.nn.ReLU(), activation=torch.nn.ReLU())
         self.loss             = torch.nn.SmoothL1Loss() if loss == 'smoothL1' else torch.nn.MSELoss()

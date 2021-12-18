@@ -1,24 +1,13 @@
-import gym
-import numpy.random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions import Normal
 import numpy as np
-import collections, random
 
 from Structure.Memory import Memory
 from Agents.Agent import Agent
 
-# Hyperparameters
-"""
-lr_pi = 0.0005
-lr_q = 0.001
-gamma = 0.98
-tau = 0.01  # for target network soft update
-lr_alpha = 0.001  # for automated alpha update
-"""
 
 class PolicyNet(nn.Module):
     def __init__(self):
@@ -57,7 +46,7 @@ class QNet(nn.Module):
 
 
 class SAC(Agent):
-    def __init__(self, env, opt, batch_size=32, memory_size=50000, batch_per_learn=20, init_alpha=0.01, target_entropy=-1, lr_alpha=0.001, **kwargs):
+    def __init__(self, env, opt, batch_size=32, memory_size=50000, batch_per_learn=20, init_alpha=0.01, target_entropy=-1, lr_alpha=0.001, tune_alpha=True, **kwargs):
         super().__init__(env, opt)
 
         # parameters
@@ -91,7 +80,8 @@ class SAC(Agent):
         self.optim_policy = optim.Adam(self.policy.parameters(), lr=self.lr_policy)
 
         # setup alpha tuning
-        self.log_alpha = torch.tensor(np.log(init_alpha))
+        self.tune_alpha = tune_alpha
+        self.log_alpha  = torch.tensor(np.log(init_alpha))
         self.log_alpha.requires_grad = True
         self.log_alpha_optimizer = optim.Adam([self.log_alpha], lr=self.lr_alpha)
 
@@ -125,14 +115,14 @@ class SAC(Agent):
         res['Alpha'] = self.log_alpha.exp()
         return res
 
-    def time_to_learn(self, done):
-        if done and self.memory.nentities > 1000:
+    def time_to_learn(self):
+        if self.memory.nentities > 1000:
             return True
         else:
             return False
 
     def store(self, transition):
-        self.memory.put(transition)
+        self.memory.store(transition)
 
     def _compute_objective(self, reward, new_obs, done):
         with torch.no_grad():
@@ -142,7 +132,7 @@ class SAC(Agent):
 
             q1_q2 = torch.cat([q1_val, q2_val], dim=1)
             min_q = torch.min(q1_q2, 1, keepdim=True)[0]
-            target = reward + self.discount * done * (min_q + entropy)
+            target = reward + self.discount * (~done).float() * (min_q + entropy)
 
         return target
 
@@ -171,9 +161,11 @@ class SAC(Agent):
         loss.mean().backward()
         self.optim_policy.step()
 
-        self.log_alpha_optimizer.zero_grad()
-        alpha_loss = -(self.log_alpha.exp() * (log_prob + self.target_entropy).detach()).mean()
-        alpha_loss.backward()
+        alpha_loss = 0
+        if self.tune_alpha:
+            self.log_alpha_optimizer.zero_grad()
+            alpha_loss = -(self.log_alpha.exp() * (log_prob + self.target_entropy).detach()).mean()
+            alpha_loss.backward()
         self.log_alpha_optimizer.step()
         return loss.mean().item(), alpha_loss.item(), entropy.mean().item()
 

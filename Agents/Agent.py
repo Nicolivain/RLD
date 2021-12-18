@@ -9,6 +9,8 @@ class Agent(ABC):
         self.config         = config
         self.action_space   = env.action_space
 
+        self.featureExtractor = config.featExtractor(env)
+
         self.discount       = config.gamma
         self.decay          = config.decay
         self.alpha          = config.learningRate
@@ -22,7 +24,10 @@ class Agent(ABC):
         pass
 
     @abstractmethod
-    def learn(self, obs):
+    def learn(self, done):
+        pass
+
+    def store(self, transition):
         pass
 
     def save(self, path):

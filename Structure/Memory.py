@@ -82,7 +82,7 @@ class Memory:
     #        ind = dict[transition]
     #    return ind
 
-    def put(self, transition):
+    def store(self, transition):
         if self.prior:
             p = self.tree.max_p
             if not p:
@@ -134,12 +134,12 @@ class Memory:
             a_lst.append([transition['action']])
             r_lst.append([transition['reward']])
             s_prime_lst.append(transition['new_obs'])
-            done_mask = 0.0 if transition['done'] else 1.0
+            done_mask = transition['done']
             done_mask_lst.append([done_mask])
 
         dct = {'obs': torch.tensor(s_lst, dtype=torch.float), 'action': torch.tensor(a_lst, dtype=torch.float),
                'reward': torch.tensor(r_lst, dtype=torch.float), 'new_obs': torch.tensor(s_prime_lst, dtype=torch.float),
-               'done': torch.tensor(done_mask_lst, dtype=torch.float)}
+               'done': torch.tensor(done_mask_lst)}
         return dct
 
     def update(self, idx, tderr):

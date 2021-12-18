@@ -5,6 +5,8 @@ from Agents.Continuous.SAC import SAC
 from Tools.core import *
 from Tools.utils import *
 
+from Core.Trainer import Trainer
+
 matplotlib.use("Qt5agg")
 # matplotlib.use("TkAgg")
 
@@ -13,9 +15,20 @@ if __name__ == '__main__':
     torch.manual_seed(1)
     numpy.random.seed(1)
 
-    env, config, outdir, logger = init('Training/configs/config_random_pendulum.yaml', 'SAC', outdir=None, copy_config=False, launch_tb=False)
-    agent = SAC(env, config)
+    env, config, outdir, logger = init('Config/env_config/config_random_pendulum.yaml', 'SAC', outdir=None, copy_config=False, launch_tb=False)
+    agent = SAC
 
+    xp = Trainer(agent          = agent,
+                 env            = env,
+                 env_config     = config,
+                 agent_params   = {'env': env, 'opt': config},
+                 logger         = logger,
+                 reward_rescale = 10,
+                 action_rescale = 2.0)
+
+    xp.train_agent(outdir)
+
+    """
     freqTest = config["freqTest"]
     freqSave = config["freqSave"]
     nbTest = config["nbTest"]
@@ -26,6 +39,7 @@ if __name__ == '__main__':
     mean = 0
     for n_epi in range(10000):
         s = env.reset()
+        s = agent.featureExtractor.getFeatures(s)
         done = False
 
         # C'est le moment de tester l'agent
@@ -43,20 +57,21 @@ if __name__ == '__main__':
             agent.test = False
 
         while not done:
-            a, log = agent.policy(torch.from_numpy(s).float())
-            s_prime, r, done, info = env.step([2.0 * a.item()])
+            a = agent.act(torch.from_numpy(s).float())
+            s_prime, r, done, info = env.step([2.0 * a])
+            s_prime = agent.featureExtractor.getFeatures(s_prime)
             transition = {
                 'obs': s,
-                'action': a.item(),
+                'action': a,
                 'reward': r / 10.0,
                 'new_obs': s_prime,
                 'done': done
             }
-            agent.memory.put(transition)
+            agent.store(transition)
             score += r
             s = s_prime
 
-        if agent.time_to_learn(done):
+        if agent.time_to_learn():
             result_dict = agent.learn(done)
             for k, v in result_dict.items():
                 logger.direct_write(k, v, n_epi)
@@ -68,3 +83,4 @@ if __name__ == '__main__':
             score = 0.0
 
     env.close()
+    """

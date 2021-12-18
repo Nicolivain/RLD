@@ -3,14 +3,30 @@ import matplotlib
 from Agents.Continuous.DDPG import DDPG
 from Tools.core import *
 from Tools.utils import *
+from Core.Trainer import Trainer
 
 matplotlib.use("Qt5agg")
 # matplotlib.use("TkAgg")
 
 if __name__ == '__main__':
+    env, config, outdir, logger = init('Config/env_config/config_random_mountain_car.yaml', 'DDPG', outdir=None,
+                                       copy_config=False, launch_tb=False)
+    agent = DDPG
 
+    xp = Trainer(agent=agent,
+                 env=env,
+                 env_config=config,
+                 agent_params={'env': env, 'opt': config},
+                 logger=logger,
+                 reward_rescale=10,
+                 action_rescale=2.0)
+
+    xp.train_agent(outdir)
+
+
+    """
     mode = ['DDPG'][0]
-    env, config, outdir, logger = init('Training/configs/config_random_mountain_car.yaml', mode)
+    env, config, outdir, logger = init('Config/env_config/config_random_mountain_car.yaml', mode)
     torch.manual_seed(config['seed'])
     freqTest = config["freqTest"]
     freqSave = config["freqSave"]
@@ -109,3 +125,4 @@ if __name__ == '__main__':
                 break
 
     env.close()
+    """
