@@ -7,6 +7,6 @@ nbTest: 1
 freqVerbose: 10
 freqOptim: 1000                                                                          # Optimisation de la politique tous les freqOptim evenements
 fromFile: null
-nbEpisodes: 10000
-maxLengthTest: 500                                                                    # Longueur maxi des trajectoires en Test
-maxLengthTrain: 100
+nbEpisodes: 50000
+maxLengthTest: 200                                                                    # Longueur maxi des trajectoires en Test
+maxLengthTrain: 200

@@ -24,6 +24,6 @@ if __name__ == '__main__':
                  agent_params   = params,
                  logger         = logger,
                  reward_rescale = 10,
-                 action_rescale = 2.0)
+                 action_rescale = 1.0)
 
     xp.train_agent(outdir)

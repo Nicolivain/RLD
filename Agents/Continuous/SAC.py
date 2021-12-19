@@ -30,15 +30,37 @@ class PolicyNet(nn.Module):
 
 
 class PolicyNet(nn.Module):
-    def __init__(self, in_size, action_space_size, layers = None, activation = torch.nn.ReLU()):
+    def __init__(self, in_size, action_space_size, layers = [64,64,32,32], activation = torch.nn.LeakyReLU(), final_activation = None, batch_norm = False):
         super(PolicyNet, self).__init__()
-        self.fc1 = nn.Linear(in_size, 128)
-        self.fc_mu = nn.Linear(128, action_space_size)
-        self.fc_std = nn.Linear(128, action_space_size)
+        self.layers = nn.ModuleList([])
+        self.batch_norm = batch_norm
+        if self.batch_norm :
+            self.norm_layers = nn.ModuleList([])
+        #we build the fully-connected part
+        for size in layers :
+            self.layers.append(nn.Linear(in_size, size))
+            if self.batch_norm :
+                self.norm_layers.append(nn.BatchNorm1d(size))
+            in_size = size
+        #self.fc1 = nn.Linear(in_size, 128)
+        self.fc_mu = nn.Linear(layers[-1], action_space_size)
+        self.fc_std = nn.Linear(layers[-1], action_space_size)
         self.activation = activation
+        self.final_activation = final_activation
 
     def forward(self, x):
-        x = self.activation(self.fc1(x))
+        #forward through the fully-connected
+        x = self.layers[0](x)
+        for i in range(1, len(self.layers)):
+            if self.batch_norm:
+                x = self.norm_layers[i-1](x) #here i-1 to take the first batchnorm layer
+            x = self.activation(x)
+            x = self.layers[i](x)
+        if self.batch_norm :
+            x = self.norm_layers[-1](x)
+        if self.final_activation is not None :
+            x = self.final_activation(x)
+        #x = self.activation(self.fc1(x))
         mu = self.fc_mu(x)
         std = F.softplus(self.fc_std(x))
         dist = Normal(mu, std)
@@ -50,24 +72,36 @@ class PolicyNet(nn.Module):
 
 
 class QNet(nn.Module):
-    def __init__(self, state_input_size, action_space_size):
+    def __init__(self, state_input_size, action_space_size, activation = torch.nn.LeakyReLU(), batch_norm = True):
         super(QNet, self).__init__()
         self.fc_s = nn.Linear(state_input_size, 64)
         self.fc_a = nn.Linear(action_space_size, 64)
         self.fc_cat = nn.Linear(128, 32)
         self.fc_out = nn.Linear(32, 1)
+        self.activation = activation
+        self.batch_norm = batch_norm
+        if self.batch_norm :
+            self.batch_norm_s = nn.BatchNorm1d(64)
+            self.batch_norm_a = nn.BatchNorm1d(64)
+            self.batch_norm_cat = nn.BatchNorm1d(64)
+
 
     def forward(self, x, a):
-        h1 = F.relu(self.fc_s(x))
-        h2 = F.relu(self.fc_a(a))
+        h1 = self.activation(self.fc_s(x)) #latent for states
+        h2 = self.activation(self.fc_a(a)) #latent for actions
+        if self.batch_norm :
+            h1 = self.batch_norm_s(h1)
+            h2 = self.batch_norm_s(h2)
         cat = torch.cat([h1, h2], dim=1)
-        q = F.relu(self.fc_cat(cat))
+        if self.batch_norm :
+            cat = self.batch_norm_cat(cat)
+        q = self.activation(self.fc_cat(cat))
         q = self.fc_out(q)
         return q
 
 
 class SAC(Agent):
-    def __init__(self, env, opt, batch_size=32, memory_size=50000, batch_per_learn=20, init_alpha=0.01, target_entropy=-1, lr_alpha=0.001, lr_policy=0.0005, lr_q=0.001, tune_alpha=True, rho=0.01, discount=0.98, **kwargs):
+    def __init__(self, env, opt, batch_size=32, memory_size=50000, batch_per_learn=20, init_alpha=0.01, target_entropy=-1, lr_alpha=0.001, lr_policy=0.0005, lr_q=0.001, tune_alpha=True, rho=0.01, discount=0.98, layers_p = [64,64,32,32], batch_norm = True, **kwargs):
         super().__init__(env, opt)
 
         # parameters
@@ -86,19 +120,19 @@ class SAC(Agent):
         self.memory = Memory(self.memory_size)
 
         # setup Q networks
-        self.q1 = QNet(state_input_size=self.featureExtractor.outSize, action_space_size=self.action_space.shape[0])
-        self.q2 = QNet(state_input_size=self.featureExtractor.outSize, action_space_size=self.action_space.shape[0])
+        self.q1 = QNet(state_input_size=self.featureExtractor.outSize, action_space_size=self.action_space.shape[0], batch_norm=batch_norm)
+        self.q2 = QNet(state_input_size=self.featureExtractor.outSize, action_space_size=self.action_space.shape[0], batch_norm=batch_norm)
         self.optim_q1 = optim.Adam(self.q1.parameters(), lr=self.lr_q)
         self.optim_q2 = optim.Adam(self.q2.parameters(), lr=self.lr_q)
 
         # setup Q target networks
-        self.q1_target = QNet(state_input_size=self.featureExtractor.outSize, action_space_size=self.action_space.shape[0])
-        self.q2_target = QNet(state_input_size=self.featureExtractor.outSize, action_space_size=self.action_space.shape[0])
+        self.q1_target = QNet(state_input_size=self.featureExtractor.outSize, action_space_size=self.action_space.shape[0], batch_norm=batch_norm)
+        self.q2_target = QNet(state_input_size=self.featureExtractor.outSize, action_space_size=self.action_space.shape[0], batch_norm=batch_norm)
         self.q1_target.load_state_dict(self.q1.state_dict())
         self.q2_target.load_state_dict(self.q2.state_dict())
 
         # setup Policy network
-        self.policy = PolicyNet(in_size=self.featureExtractor.outSize, action_space_size=self.action_space.shape[0])
+        self.policy = PolicyNet(in_size=self.featureExtractor.outSize, action_space_size=self.action_space.shape[0], layers = layers_p, batch_norm=batch_norm)
         self.optim_policy = optim.Adam(self.policy.parameters(), lr=self.lr_policy)
 
         # setup alpha tuning
