@@ -68,8 +68,7 @@ class Trainer:
             self.logger.direct_write("Test Reward", mean / self.env_config.nbTest, itest)
             self.agent.test = False
 
-        return mean
-
+        return mean, itest
 
     def train_agent(self, outdir, print_every=1):
         itest    = 0
@@ -82,7 +81,7 @@ class Trainer:
             s = self.env.reset()
 
             # Check if we test or if we display
-            mean = self._test_agent_setup(i, mean, itest)
+            mean, itest = self._test_agent_setup(i, mean, itest)
             self._display_setup(i)
 
             # Check if we save
