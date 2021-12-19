@@ -3,6 +3,10 @@
 ### Reinforcement Learning course from Master M2A (DAC) @ Sorbonne Université Paris.
 Course website: https://dac.lip6.fr/master/rld-2021-2022/
 
+### Getting started:
+main.py contains an hyperparameters search tool. A main file for each algorithm/TME is available under 'TP' folder.
+Hyperparameters of each algorithm can be tuned in 'Config/model_parameters', and then executed through the associated main function in 'TP'.
+
 ### Implemented Algorithms:
 - UCB and LinUCB Bandits
 - Policy and Value Iteration 
