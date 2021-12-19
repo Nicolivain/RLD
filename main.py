@@ -40,6 +40,13 @@ if __name__ == '__main__':
     save_root_dir = 'XP'
 
     # SEARCH
+
+    search_space = {
+        'gamma'         : [0.98, 0.99, 0.999],
+        'memory_size'   : [256, 512, 1024],
+        'learning_rate' : [0.01, 0.001, 0.0001],
+    }
+
     # Tous les params ne sont pas necessairement utiles pour tous les modeles
 
     models = {'DQN' : DQN,
@@ -62,19 +69,17 @@ if __name__ == '__main__':
                    }[env]
 
     agent_params = {
-                    'layers'            : [256],
-                    'batch_size'        : None,
-                    'memory_size'       : 1000,
-                    'k'                 : 5,
-                    'use_dkl'           : True,
-                    'reversed_dkl'      : False
-                    }
-
-    search_space = {
-                    'gamma'                : [0.98, 0.99, 0.999],
-                    'memory_size'          : [256, 512, 1024],
-                    'learningRate'         : [0.01, 0.001, 0.0001],
-                    }
+                    'DQN'       : 'Config/model_config/config_DQN.yaml',
+                    'ReplayDQN' : 'Config/model_config/config_DQN.yaml',
+                    'TargetDQN' : 'Config/model_config/config_DQN.yaml',
+                    'minDQN'    : 'Config/model_config/config_DQN.yaml',
+                    'Dueling'   : 'Config/model_config/config_DQN.yaml',
+                    'A2C'       : 'Config/model_config/config_A2C.yaml',
+                    'PPO'       : 'Config/model_config/config_PPO.yaml',
+                    'ClippedPPO': 'Config/model_config/config_PPO.yaml',
+                    'DDPG'      : 'Config/model_config/config_DDPG.yaml',
+                    'SAC'       : 'Config/model_config/config_SAC.yaml',
+                    }[mode]
 
     save_path = os.path.join(save_root_dir, env, mode)
 

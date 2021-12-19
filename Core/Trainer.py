@@ -68,7 +68,7 @@ class Trainer:
 
         return mean
 
-    def train_agent(self, outdir):
+    def train_agent(self, outdir, print_every=1):
         itest    = 0
         mean     = 0
         res_dict = {}
@@ -97,6 +97,7 @@ class Trainer:
                 self.logger.direct_write(k, v, i)
 
             mean += rsum
-            print('Episode {:5d} Reward: {:3.1f} #Action: {:4d}'.format(i, rsum, n_action))
+            if i % print_every == 0:
+                print('Episode {:5d} Reward: {:3.1f} #Action: {:4d}'.format(i, rsum, n_action))
 
         print('Done')
