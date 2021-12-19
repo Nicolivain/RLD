@@ -26,13 +26,15 @@ class QPolicyNet:
 
 
 class DDPG(Agent):
-    def __init__(self, env, opt, layers, batch_per_learn=10, loss='smoothL1', batch_size=1000, memory_size=1000000, **kwargs):
+    def __init__(self, env, opt, layers=[10, 10], batch_per_learn=10, batch_size=1000, memory_size=1000000, lr_q=0.001, lr_policy=0.0005, discount=0.99, rho=0.01, start_events=100000, explo=0.1, **kwargs):
         super().__init__(env, opt)
 
         self.featureExtractor = opt.featExtractor(env)
-        self.loss = torch.nn.SmoothL1Loss() if loss == 'smoothL1' else torch.nn.MSELoss()
-        self.p_lr = opt.p_learningRate
-        self.q_lr = opt.q_learningRate
+        self.loss = torch.nn.SmoothL1Loss()
+        self.p_lr = lr_policy
+        self.q_lr = lr_q
+        self.discount = discount
+        self.explo = explo
 
         self.network        = QPolicyNet(in_size=self.featureExtractor.outSize, action_space_size=len(self.action_space.low), layers=layers)
         self.target_net     = deepcopy(self.network)
@@ -43,10 +45,10 @@ class DDPG(Agent):
         self.batch_size = batch_size
         self.memory_size = memory_size
         self.batch_per_learn = batch_per_learn
-        self.startEvents = opt.startEvents
+        self.startEvents = start_events
         self.noise = Orn_Uhlen(n_actions=len(self.action_space.low), sigma=self.explo)  # ??
 
-        self.rho = opt.rho
+        self.rho = rho
 
         self.freq_optim = self.config.freqOptim
         self.n_events   = 0
@@ -136,9 +138,9 @@ class DDPG(Agent):
         """soft update, using rho"""
         with torch.no_grad():
             for target_p, net_p in zip(self.target_net.policy_net.parameters(), self.network.policy_net.parameters()):
-                new_p = self.rho * target_p + (1 - self.rho) * net_p
+                new_p = (1 - self.rho) * target_p + self.rho * net_p
                 target_p.copy_(new_p)
 
             for target_p, net_p in zip(self.target_net.q_net.parameters(), self.network.q_net.parameters()):
-                new_p = self.rho * target_p + (1 - self.rho) * net_p
+                new_p = (1 - self.rho) * target_p + self.rho * net_p
                 target_p.copy_(new_p)

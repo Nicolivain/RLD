@@ -126,12 +126,23 @@ class Memory:
             return mask, 0,  self.mem[mask]
 
     def sample_batch(self, batch_size, n_batch=1):
-        _, _, experiences = self.sample(n_batch * batch_size)
-        batches = {}
-        for k in experiences[0].keys():
-            batches[k] = torch.from_numpy(np.vstack([e[k] for e in experiences])).reshape(n_batch, batch_size, -1)
-            batches[k] = torch.squeeze(batches[k])
-        return batches
+        _, _, mini_batch = self.sample(batch_size)
+        s_lst, a_lst, r_lst, s_prime_lst, done_mask_lst = [], [], [], [], []
+
+        multi_act = type(mini_batch[0]['action']) == torch.Tensor
+        agg = torch.vstack if multi_act else torch.tensor
+        for transition in mini_batch:
+            s_lst.append(transition['obs'])
+            a_lst.append(transition['action'] if multi_act else [transition['action']])
+            r_lst.append([transition['reward']])
+            s_prime_lst.append(transition['new_obs'])
+            done_mask = transition['done']
+            done_mask_lst.append([done_mask])
+
+        dct = {'obs': torch.tensor(s_lst, dtype=torch.float), 'action': agg(a_lst),
+               'reward': torch.tensor(r_lst, dtype=torch.float), 'new_obs': torch.tensor(s_prime_lst, dtype=torch.float),
+               'done': torch.tensor(done_mask_lst)}
+        return dct
 
     def update(self, idx, tderr):
         if self.prior:

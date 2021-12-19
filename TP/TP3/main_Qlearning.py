@@ -11,7 +11,7 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 if __name__ == '__main__':
 
-    env, config, outdir, logger = init('../../Training/configs/config_qlearning_gridworld.yaml', "QLearning_plan5_lr0.1") #_explo0.2_decay0.9")
+    env, config, outdir, logger = init('../../Config/env_config/config_qlearning_gridworld.yaml', "QLearning_plan5_lr0.1") #_explo0.2_decay0.9")
 
     # Config
     freqTest = config["freqTest"]

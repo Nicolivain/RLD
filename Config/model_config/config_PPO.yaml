@@ -1,0 +1,10 @@
+batch_size: 1000
+memory_size: 1000
+k: 20
+delta: 0.001
+learning_rate: 0.001
+layers: [10, 10]
+use_dkl: True
+reversed_dkl: True
+discount: 0.99  # gamma
+epsilon: 0.01

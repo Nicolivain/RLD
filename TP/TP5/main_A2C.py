@@ -3,13 +3,32 @@ import matplotlib
 from Agents.Policy.A2C import A2C
 from Tools.core import *
 from Tools.utils import *
+from Core.Trainer import Trainer
 
 matplotlib.use("Qt5agg")
 # matplotlib.use("TkAgg")
 
+
 if __name__ == '__main__':
+
+    env, config, outdir, logger = init('Config/env_config/config_random_cartpole.yaml', 'DDPG', outdir=None,
+                                       copy_config=False, launch_tb=False)
+    params = load_model_params('A2C', env, config)
+    agent = A2C
+
+    xp = Trainer(agent          = agent,
+                 env            = env,
+                 env_config     = config,
+                 agent_params   = params,
+                 logger         = logger,
+                 reward_rescale = 100,
+                 action_rescale = 1)
+
+    xp.train_agent(outdir)
+
+    """
     mode = ['A2C'][0]
-    env, config, outdir, logger = init('Training/configs/config_random_cartpole.yaml', mode)
+    env, config, outdir, logger = init('Config/env_config/config_random_cartpole.yaml', mode)
 
     torch.manual_seed(config['seed'])
     freqTest = config["freqTest"]
@@ -109,3 +128,4 @@ if __name__ == '__main__':
                 break
 
     env.close()
+    """

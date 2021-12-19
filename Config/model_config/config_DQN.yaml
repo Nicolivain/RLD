@@ -1,0 +1,9 @@
+batch_size: 32
+memory_size: 1000
+learning_rate: 0.001
+layers: [10, 10]
+discount: 0.99  # gamma
+explo: 0.1
+explo_mode: 0  # 0: espilon greedy, 1: ucb
+decay: 0.9999
+freq_update_target: 1000

@@ -46,7 +46,7 @@ class NothingToDo(FeatureExtractor):
 
     def getFeatures(self, obs):
         # print(obs)
-        return obs.reshape(1, -1)
+        return obs
 
 # Ajoute le numero d'iteration (a priori pas vraiment utile et peut
 # destabiliser dans la plupart des cas etudiés)
