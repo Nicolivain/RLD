@@ -8,26 +8,6 @@ import numpy as np
 from Structure.Memory import Memory
 from Agents.Agent import Agent
 
-"""
-class PolicyNet(nn.Module):
-    def __init__(self, input_size):
-        super(PolicyNet, self).__init__()
-        self.fc1 = nn.Linear(input_size, 128)
-        self.fc_mu = nn.Linear(128, 1)
-        self.fc_std = nn.Linear(128, 1)
-
-    def forward(self, x):
-        x = F.relu(self.fc1(x))
-        mu = self.fc_mu(x)
-        std = F.softplus(self.fc_std(x))
-        dist = Normal(mu, std)
-        action = dist.rsample()
-        log_prob = dist.log_prob(action)
-        real_action = torch.tanh(action)
-        real_log_prob = log_prob - torch.log(1 - torch.tanh(action).pow(2) + 1e-7)
-        return real_action, real_log_prob
-"""
-
 
 class PolicyNet(nn.Module):
     def __init__(self, in_size, action_space_size, layers=(64, 64, 32, 32), activation=torch.nn.LeakyReLU(), final_activation=None):
@@ -88,7 +68,7 @@ class QNet(nn.Module):
 
 
 class SAC(Agent):
-    def __init__( self, env, opt, batch_size=32, memory_size=50000, batch_per_learn=20, init_alpha=0.01, target_entropy=-1, lr_alpha=0.001, lr_policy=0.0005, lr_q=0.001, tune_alpha=True, rho=0.01, discount=0.98, layers_p=[64, 64, 32, 32], **kwargs):
+    def __init__( self, env, opt, batch_size=32, memory_size=50000, batch_per_learn=20, init_alpha=0.01, target_entropy=-1, lr_alpha=0.001, lr_policy=0.0005, lr_q=0.001, tune_alpha=True, rho=0.01, discount=0.98, layers_p=(64, 64, 32, 32), **kwargs):
         super().__init__(env, opt)
 
         # parameters
@@ -226,13 +206,13 @@ class SAC(Agent):
         loss.mean().backward()
         self.optim_policy.step()
 
-        alpha_loss = 0
+        alpha_loss = torch.Tensor([0])
         if self.tune_alpha:
             self.log_alpha_optimizer.zero_grad()
             alpha_loss = -(self.log_alpha.exp() * (log_prob +
                            self.target_entropy).detach()).mean()
             alpha_loss.backward()
-        self.log_alpha_optimizer.step()
+            self.log_alpha_optimizer.step()
         return loss.mean().item(), alpha_loss.item(), entropy.mean().item()
 
     def _update_target(self):

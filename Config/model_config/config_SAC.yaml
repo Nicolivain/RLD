@@ -10,4 +10,4 @@ rho: 0.01
 discount: 0.98  # gamma
 tune_alpha: True
 batch_norm: True
-layers_p: [64,64,32,32]
+layers_p: [64, 32]
