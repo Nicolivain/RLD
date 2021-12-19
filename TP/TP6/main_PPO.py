@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     mode = ['PPO', 'ClippedPPO'][1]
 
-    env, config, outdir, logger = init('Config/env_config/config_random_cartpole.yaml', mode, outdir=None,
+    env, config, outdir, logger = init('Config/env_config/config_random_lunar.yaml', mode, outdir=None,
                                        copy_config=False, launch_tb=False)
     params = load_model_params('PPO', env, config)
     agent = {'PPO': AdaptativePPO, 'ClippedPPO': ClippedPPO}[mode]

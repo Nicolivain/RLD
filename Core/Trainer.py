@@ -39,6 +39,8 @@ class Trainer:
     def _scale_action(self, a):
         if type(a) == list:
             return [self.action_rescale * c for c in a]
+        elif type(a) == torch.Tensor:
+            return self.action_rescale * a.numpy()
         else:
             return self.action_rescale * a
 
@@ -67,6 +69,7 @@ class Trainer:
             self.agent.test = False
 
         return mean
+
 
     def train_agent(self, outdir, print_every=1):
         itest    = 0

@@ -129,15 +129,17 @@ class Memory:
         _, _, mini_batch = self.sample(batch_size)
         s_lst, a_lst, r_lst, s_prime_lst, done_mask_lst = [], [], [], [], []
 
+        multi_act = type(mini_batch[0]['action']) == torch.Tensor
+        agg = torch.vstack if multi_act else torch.tensor
         for transition in mini_batch:
             s_lst.append(transition['obs'])
-            a_lst.append([transition['action']])
+            a_lst.append(transition['action'] if multi_act else [transition['action']])
             r_lst.append([transition['reward']])
             s_prime_lst.append(transition['new_obs'])
             done_mask = transition['done']
             done_mask_lst.append([done_mask])
 
-        dct = {'obs': torch.tensor(s_lst, dtype=torch.float), 'action': torch.tensor(a_lst, dtype=torch.float),
+        dct = {'obs': torch.tensor(s_lst, dtype=torch.float), 'action': agg(a_lst),
                'reward': torch.tensor(r_lst, dtype=torch.float), 'new_obs': torch.tensor(s_prime_lst, dtype=torch.float),
                'done': torch.tensor(done_mask_lst)}
         return dct

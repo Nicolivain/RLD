@@ -8,7 +8,7 @@ import numpy as np
 from Structure.Memory import Memory
 from Agents.Agent import Agent
 
-
+"""
 class PolicyNet(nn.Module):
     def __init__(self, input_size):
         super(PolicyNet, self).__init__()
@@ -26,13 +26,34 @@ class PolicyNet(nn.Module):
         real_action = torch.tanh(action)
         real_log_prob = log_prob - torch.log(1 - torch.tanh(action).pow(2) + 1e-7)
         return real_action, real_log_prob
+"""
+
+
+class PolicyNet(nn.Module):
+    def __init__(self, in_size, action_space_size, layers = None, activation = torch.nn.ReLU()):
+        super(PolicyNet, self).__init__()
+        self.fc1 = nn.Linear(in_size, 128)
+        self.fc_mu = nn.Linear(128, action_space_size)
+        self.fc_std = nn.Linear(128, action_space_size)
+        self.activation = activation
+
+    def forward(self, x):
+        x = self.activation(self.fc1(x))
+        mu = self.fc_mu(x)
+        std = F.softplus(self.fc_std(x))
+        dist = Normal(mu, std)
+        action = dist.rsample()
+        log_prob = dist.log_prob(action)
+        real_action = torch.tanh(action)  # projection onto the right set of actions
+        real_log_prob = log_prob - torch.log(1 - torch.tanh(action).pow(2) + 1e-7)  # we use the formula for change of variable
+        return real_action, real_log_prob.sum()
 
 
 class QNet(nn.Module):
-    def __init__(self, state_input_size):
+    def __init__(self, state_input_size, action_space_size):
         super(QNet, self).__init__()
         self.fc_s = nn.Linear(state_input_size, 64)
-        self.fc_a = nn.Linear(1, 64)
+        self.fc_a = nn.Linear(action_space_size, 64)
         self.fc_cat = nn.Linear(128, 32)
         self.fc_out = nn.Linear(32, 1)
 
@@ -65,19 +86,19 @@ class SAC(Agent):
         self.memory = Memory(self.memory_size)
 
         # setup Q networks
-        self.q1 = QNet(state_input_size=self.featureExtractor.outSize)
-        self.q2 = QNet(state_input_size=self.featureExtractor.outSize)
+        self.q1 = QNet(state_input_size=self.featureExtractor.outSize, action_space_size=self.action_space.shape[0])
+        self.q2 = QNet(state_input_size=self.featureExtractor.outSize, action_space_size=self.action_space.shape[0])
         self.optim_q1 = optim.Adam(self.q1.parameters(), lr=self.lr_q)
         self.optim_q2 = optim.Adam(self.q2.parameters(), lr=self.lr_q)
 
         # setup Q target networks
-        self.q1_target = QNet(state_input_size=self.featureExtractor.outSize)
-        self.q2_target = QNet(state_input_size=self.featureExtractor.outSize)
+        self.q1_target = QNet(state_input_size=self.featureExtractor.outSize, action_space_size=self.action_space.shape[0])
+        self.q2_target = QNet(state_input_size=self.featureExtractor.outSize, action_space_size=self.action_space.shape[0])
         self.q1_target.load_state_dict(self.q1.state_dict())
         self.q2_target.load_state_dict(self.q2.state_dict())
 
         # setup Policy network
-        self.policy = PolicyNet(input_size=self.featureExtractor.outSize)
+        self.policy = PolicyNet(in_size=self.featureExtractor.outSize, action_space_size=self.action_space.shape[0])
         self.optim_policy = optim.Adam(self.policy.parameters(), lr=self.lr_policy)
 
         # setup alpha tuning
