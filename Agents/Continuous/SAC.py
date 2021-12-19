@@ -83,7 +83,7 @@ class QNet(nn.Module):
         if self.batch_norm :
             self.batch_norm_s = nn.BatchNorm1d(64)
             self.batch_norm_a = nn.BatchNorm1d(64)
-            self.batch_norm_cat = nn.BatchNorm1d(64)
+            self.batch_norm_cat = nn.BatchNorm1d(32)
 
 
     def forward(self, x, a):
@@ -93,9 +93,9 @@ class QNet(nn.Module):
             h1 = self.batch_norm_s(h1)
             h2 = self.batch_norm_s(h2)
         cat = torch.cat([h1, h2], dim=1)
-        if self.batch_norm :
-            cat = self.batch_norm_cat(cat)
         q = self.activation(self.fc_cat(cat))
+        if self.batch_norm :
+            q = self.batch_norm_cat(q)
         q = self.fc_out(q)
         return q
 
