@@ -37,10 +37,10 @@ class Trainer:
         return score, n_action
 
     def _scale_action(self, a):
-        if type(a) == int or type(a) == float:
-            return [self.action_rescale * a]
+        if type(a) == list:
+            return [self.action_rescale * c for c in a]
         else:
-            return [c * self.action_rescale for c in a]
+            return self.action_rescale * a
 
     def _display_setup(self, i):
         # On souhaite afficher l'environnement (attention à ne pas trop afficher car çà ralentit beaucoup)

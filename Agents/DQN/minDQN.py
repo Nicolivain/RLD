@@ -5,11 +5,11 @@ from copy import deepcopy
 
 
 class MinDQN(DQN):
-    def __init__(self, env, opt, layers, loss='mse', memory_size=10000, batch_size=100, update_target=100, **kwargs):
-        super().__init__(env, opt, layers, loss, memory_size)
+    def __init__(self, env, opt, layers, memory_size=10000, batch_size=100, freq_update_target=100, learning_rate=0.001, explo=0.1, explo_mode=0, discount=0, decay=0.9999, **kwargs):
+        super().__init__(env, opt, layers, memory_size=memory_size,  learning_rate=learning_rate, explo=explo, explo_mode=explo_mode, discount=discount, decay=decay)
         self.batch_size = batch_size
         self.target_net = deepcopy(self.Q)
-        self.update_target = update_target
+        self.update_target = freq_update_target
         self.n_learn = 0
 
     def time_to_learn(self):
@@ -27,7 +27,7 @@ class MinDQN(DQN):
         b_done      = batches['done']
 
         qhat = self.Q(b_obs)
-        learning = torch.gather(qhat, -1, b_action.reshape(-1, 1)).squeeze()
+        learning = torch.gather(qhat, -1, b_action.long().reshape(-1, 1)).squeeze()
 
         with torch.no_grad():
             qhat_target = self.target_net(b_next)

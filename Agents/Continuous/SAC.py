@@ -46,7 +46,7 @@ class QNet(nn.Module):
 
 
 class SAC(Agent):
-    def __init__(self, env, opt, batch_size=32, memory_size=50000, batch_per_learn=20, init_alpha=0.01, target_entropy=-1, lr_alpha=0.001, tune_alpha=True, **kwargs):
+    def __init__(self, env, opt, batch_size=32, memory_size=50000, batch_per_learn=20, init_alpha=0.01, target_entropy=-1, lr_alpha=0.001, lr_policy=0.0005, lr_q=0.001, tune_alpha=True, rho=0.01, discount=0.98, **kwargs):
         super().__init__(env, opt)
 
         # parameters
@@ -55,10 +55,11 @@ class SAC(Agent):
         self.batch_per_learn    = batch_per_learn
         self.target_entropy     = target_entropy
 
-        self.lr_policy = opt.p_learningRate
-        self.lr_q      = opt.q_learningRate
+        self.lr_policy = lr_policy
+        self.lr_q      = lr_q
         self.lr_alpha  = lr_alpha
-        self.rho       = opt.rho
+        self.rho       = rho
+        self.discount  = discount
 
         # setup memory
         self.memory = Memory(self.memory_size)
@@ -86,8 +87,9 @@ class SAC(Agent):
         self.log_alpha_optimizer = optim.Adam([self.log_alpha], lr=self.lr_alpha)
 
     def act(self, obs):
-        a, _ = self.policy(obs)
-        return a.item()
+        with torch.no_grad():
+            a, _ = self.policy(obs)
+        return a
 
     def learn(self, done):
         res = {'Policy Loss': 0, 'Q1 Loss': 0, 'Q2 Loss': 0, 'Entropy': 0, 'Alpha Loss': 0}

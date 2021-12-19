@@ -8,15 +8,21 @@ from Tools.exploration import pick_greedy, pick_epsilon_greedy, pick_ucb
 
 class DQN(Agent):
 
-    def __init__(self, env, opt, layers, loss='smoothL1', memory_size=1, batch_size=100, **kwargs):
+    def __init__(self, env, opt, layers, memory_size=10000, learning_rate=0.001, explo=0.1, explo_mode=0, discount=0.99, decay=0.9999, **kwargs):
         super().__init__(env, opt)
 
         self.featureExtractor = opt.featExtractor(env)
         self.Q                = NN(self.featureExtractor.outSize, self.action_space.n, layers=layers, final_activation=torch.nn.ReLU(), activation=torch.nn.ReLU())
-        self.loss             = torch.nn.SmoothL1Loss() if loss == 'smoothL1' else torch.nn.MSELoss()
-        self.optim            = torch.optim.Adam(self.Q.parameters(), lr=self.alpha)
+        self.loss             = torch.nn.SmoothL1Loss()
+        self.optim            = torch.optim.Adam(self.Q.parameters(), lr=learning_rate)
         self.memory           = Memory(memory_size)
         self.memory_size      = memory_size
+
+        self.learning_rate    = learning_rate
+        self.explo            = explo
+        self.explo_mode       = explo_mode
+        self.decay            = decay
+        self.discount         = discount
 
         self.freq_optim       = self.config.freqOptim
         self.n_events         = 0
@@ -35,15 +41,15 @@ class DQN(Agent):
         if self.test:
             return pick_greedy(values)
         else:
-            if self.exploMode == 0:
+            if self.explo_mode == 0:
                 return pick_epsilon_greedy(values, self.explo)
-            elif self.exploMode == 1:
+            elif self.explo_mode == 1:
                 return pick_ucb(values)
             else:
                 raise NotImplementedError(f'{self.exploMode} does not correspond to any available exploration function')
 
     def learn(self, done):
-        last_transition = self.memory.sample(1)[-1][0]
+        last_transition = self.memory.sample_batch(1)
         obs     = last_transition['obs']
         action  = last_transition['action']
         reward  = last_transition['reward']
@@ -56,7 +62,7 @@ class DQN(Agent):
             next_qhat = self.Q(new_obs)
             r = reward + self.discount * torch.max(next_qhat) if not done else torch.Tensor([reward])
 
-        loss = self.loss(qhat[0, action], r)
+        loss = self.loss(qhat[0, action.long().item()], r)
         loss.backward()
 
         self.optim.step()
