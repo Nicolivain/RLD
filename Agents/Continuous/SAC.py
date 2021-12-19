@@ -170,7 +170,7 @@ class SAC(Agent):
             res['Policy Loss'] += lp
             res['Q1 Loss'] += lq1
             res['Q2 Loss'] += lq2
-            res['Entropy'] += entropy / (-self.log_alpha.exp())
+            res['Entropy'] += entropy / self.log_alpha.exp() #Formula : entropy = sum[-p(x)*log(p(x))]
             res['Alpha Loss'] += alpha_loss
 
         res = {k: v / self.batch_per_learn for k, v in res.items()}
