@@ -1,0 +1,10 @@
+batch_size: 1000
+memory_size: 100000
+batch_per_learn: 20
+lr_policy: 0.0005
+lr_q: 0.001
+rho: 0.01
+discount: 0.99  # gamma
+layer: [10, 10]
+start_events: 100000
+explo: 0.1

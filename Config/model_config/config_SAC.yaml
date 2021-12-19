@@ -1,0 +1,11 @@
+batch_size: 32
+memory_size: 50000
+batch_per_learn: 20
+init_alpha: 0.01
+target_entropy: -1
+lr_alpha: 0.001
+lr_policy: 0.0005
+lr_q: 0.001
+rho: 0.01
+discount: 0.98  # gamma
+tune_alpha: True

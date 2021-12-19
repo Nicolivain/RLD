@@ -26,11 +26,13 @@ class PPONetwork(nn.Module):
 
 
 class AdaptativePPO(Agent):
-    def __init__(self, env, opt, layers, k, delta=1e-3, loss='smoothL1', memory_size=1000, batch_size=1000, use_dkl=True, reversed_dkl=False, **kwargs):
+    def __init__(self, env, opt, layers, k, delta=1e-3, memory_size=1000, batch_size=1000, use_dkl=True, reversed_dkl=False, learning_rate=0.001, discount=0.99, **kwargs):
         super().__init__(env, opt)
+
         self.featureExtractor = opt.featExtractor(env)
-        self.loss = torch.nn.SmoothL1Loss() if loss == 'smoothL1' else torch.nn.MSELoss()
-        self.lr = opt.learningRate
+        self.loss = torch.nn.SmoothL1Loss()
+        self.lr = learning_rate
+        self.discount = discount
 
         self.beta = 1
         self.delta = delta

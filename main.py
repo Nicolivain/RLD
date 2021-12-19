@@ -12,7 +12,7 @@ from Agents.Policy.ClippedPPO import ClippedPPO
 
 from Agents.Continuous.DDPG import DDPG
 
-from Tools.scheduler import TaskScheduler
+from Core.Scheduler import TaskScheduler
 from Tools.core import *
 
 
@@ -42,6 +42,13 @@ if __name__ == '__main__':
     save_root_dir = 'XP'
 
     # SEARCH
+
+    search_space = {
+        'gamma'         : [0.98, 0.99, 0.999],
+        'memory_size'   : [256, 512, 1024],
+        'learning_rate' : [0.01, 0.001, 0.0001],
+    }
+
     # Tous les params ne sont pas necessairement utiles pour tous les modeles
 
     models = {'DQN' : DQN,
@@ -55,28 +62,26 @@ if __name__ == '__main__':
               'DDPG': DDPG,
               }[mode]
 
-    config_path = {'Pendulum'   : 'Training/configs/config_random_pendulum.yaml',
-                   'MountainCar': 'Training/configs/config_random_mountain_car.yaml',
-                   'LunarLander': 'Training/configs/config_random_lunar.yaml',
-                   'Gridworld'  : 'Training/configs/config_random_gridworld.yaml',
-                   'Cartpole'   : 'Training/configs/config_random_cartpole.yaml',
-                   'QLGridworld': 'Training/configs/config_qleanring_gridworld.yaml',
+    config_path = {'Pendulum'   : 'Config/env_config/config_random_pendulum.yaml',
+                   'MountainCar': 'Config/env_config/config_random_mountain_car.yaml',
+                   'LunarLander': 'Config/env_config/config_random_lunar.yaml',
+                   'Gridworld'  : 'Config/env_config/config_random_gridworld.yaml',
+                   'Cartpole'   : 'Config/env_config/config_random_cartpole.yaml',
+                   'QLGridworld': 'Config/env_config/config_qleanring_gridworld.yaml',
                    }[env]
 
     agent_params = {
-                    'layers'            : [256],
-                    'batch_size'        : None,
-                    'memory_size'       : 1000,
-                    'k'                 : 5,
-                    'use_dkl'           : True,
-                    'reversed_dkl'      : False
-                    }
-
-    search_space = {
-                    'gamma'                : [0.98, 0.99, 0.999],
-                    'memory_size'          : [256, 512, 1024],
-                    'learningRate'         : [0.01, 0.001, 0.0001],
-                    }
+                    'DQN'       : 'Config/model_config/config_DQN.yaml',
+                    'ReplayDQN' : 'Config/model_config/config_DQN.yaml',
+                    'TargetDQN' : 'Config/model_config/config_DQN.yaml',
+                    'minDQN'    : 'Config/model_config/config_DQN.yaml',
+                    'Dueling'   : 'Config/model_config/config_DQN.yaml',
+                    'A2C'       : 'Config/model_config/config_A2C.yaml',
+                    'PPO'       : 'Config/model_config/config_PPO.yaml',
+                    'ClippedPPO': 'Config/model_config/config_PPO.yaml',
+                    'DDPG'      : 'Config/model_config/config_DDPG.yaml',
+                    'SAC'       : 'Config/model_config/config_SAC.yaml',
+                    }[mode]
 
     save_path = os.path.join(save_root_dir, env, mode)
 

@@ -1,0 +1,12 @@
+env: LunarLander-v2 #LunarLander-v2
+seed: 5
+featExtractor: !!python/name:__main__.NothingToDo ''
+freqSave: 1000
+freqTest: 100
+nbTest: 10
+freqVerbose: 100000
+freqOptim: 1000                                                                          # Optimisation de la politique tous les freqOptim evenements
+fromFile: null
+nbEpisodes: 10000
+maxLengthTest: 300                                                                    # Longueur maxi des trajectoires en Test
+maxLengthTrain: 300
