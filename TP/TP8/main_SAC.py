@@ -14,7 +14,7 @@ if __name__ == '__main__':
     torch.manual_seed(1)
     numpy.random.seed(1)
 
-    env, config, outdir, logger = init('Config/env_config/config_random_lunar_continuous.yaml', 'SAC', outdir=None, copy_config=False, launch_tb=False)
+    env, config, outdir, logger = init('Config/env_config/config_random_pendulum.yaml', 'SAC', outdir=None, copy_config=False, launch_tb=False)
     params = load_model_params('SAC', env, config)
     agent = SAC
 
