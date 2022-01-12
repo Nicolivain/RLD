@@ -17,7 +17,7 @@ class Trainer:
         done = False
         score = 0
         n_action = 0
-        while not done:
+        while not done and n_action < self.env_config.maxLengthTrain:
             a = self.agent.act(torch.from_numpy(s).float())
             played_a = self._scale_action(a)
             s_prime, r, done, info = self.env.step(played_a)

@@ -68,7 +68,7 @@ class QNet(nn.Module):
 
 
 class SAC(Agent):
-    def __init__( self, env, opt, batch_size=32, memory_size=50000, batch_per_learn=20, init_alpha=0.01, target_entropy=-1, lr_alpha=0.001, lr_policy=0.0005, lr_q=0.001, tune_alpha=True, rho=0.01, discount=0.98, layers_p=(64, 64, 32, 32), **kwargs):
+    def __init__( self, env, opt, batch_size=32, memory_size=50000, batch_per_learn=20, init_alpha=0.01, target_entropy=-1, lr_alpha=0.001, lr_policy=0.0005, lr_q=0.001, tune_alpha=True, rho=0.01, discount=0.98, layers_p=(64, 64, 32, 32), activation = 'Leaky Relu', **kwargs):
         super().__init__(env, opt)
 
         # parameters
@@ -83,26 +83,35 @@ class SAC(Agent):
         self.rho = rho
         self.discount = discount
 
+        if activation == 'Leaky Relu':
+            self.activation = torch.nn.LeakyReLU()
+        else:
+            self.activation = torch.nn.ReLU()
+
         # setup memory
         self.memory = Memory(self.memory_size)
 
         # setup Q networks
         self.q1 = QNet(
             state_input_size=self.featureExtractor.outSize,
-            action_space_size=self.action_space.shape[0])
+            action_space_size=self.action_space.shape[0],
+            activation = self.activation)
         self.q2 = QNet(
             state_input_size=self.featureExtractor.outSize,
-            action_space_size=self.action_space.shape[0])
+            action_space_size=self.action_space.shape[0],
+            activation = self.activation)
         self.optim_q1 = optim.Adam(self.q1.parameters(), lr=self.lr_q)
         self.optim_q2 = optim.Adam(self.q2.parameters(), lr=self.lr_q)
 
         # setup Q target networks
         self.q1_target = QNet(
             state_input_size=self.featureExtractor.outSize,
-            action_space_size=self.action_space.shape[0])
+            action_space_size=self.action_space.shape[0],
+            activation = self.activation)
         self.q2_target = QNet(
             state_input_size=self.featureExtractor.outSize,
-            action_space_size=self.action_space.shape[0])
+            action_space_size=self.action_space.shape[0],
+            activation = self.activation)
         self.q1_target.load_state_dict(self.q1.state_dict())
         self.q2_target.load_state_dict(self.q2.state_dict())
 
@@ -110,7 +119,8 @@ class SAC(Agent):
         self.policy = PolicyNet(
             in_size=self.featureExtractor.outSize,
             action_space_size=self.action_space.shape[0],
-            layers=layers_p)
+            layers=layers_p,
+            activation = self.activation)
         self.optim_policy = optim.Adam(
             self.policy.parameters(), lr=self.lr_policy)
 
