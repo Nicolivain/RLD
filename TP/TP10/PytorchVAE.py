@@ -4,6 +4,8 @@ import os
 import torch
 import torch.nn as nn
 
+from progress_bar import print_progress_bar
+
 
 class PytorchVAE(nn.Module):
     def __init__(self, criterion='bce', logger=None, opt='adam', device='cpu', ckpt_save_path=None):
@@ -14,7 +16,7 @@ class PytorchVAE(nn.Module):
         self.device = device
         self.ckpt_save_path = ckpt_save_path
         self.state = {}
-        self.criterion = nn.MSELoss() if criterion == 'mse' else nn.BCELoss() if criterion == 'bce' else criterion
+        self.criterion = nn.MSELoss(reduction='sum') if criterion == 'mse' else nn.BCELoss(reduction='sum') if criterion == 'bce' else criterion
 
         self.best_criterion = {'loss' : 10**10,  'v_loss': 10**10, 'acc': -1, 'v_acc': -1}
         self.best_model = None
@@ -33,8 +35,8 @@ class PytorchVAE(nn.Module):
             batch_x, batch_y = batch
             batch_x = batch_x.to(self.device)
 
-            z, mu, std = self.encode(batch_x)
-            kll = self.lattent_reg(z, mu, std)
+            z, mu, logvar = self.encode(batch_x)
+            kll = self.lattent_reg(mu, logvar)
             xhat = self.decode(z)
             bce = self.criterion(xhat, batch_x)
             loss = bce + kll
@@ -46,7 +48,10 @@ class PytorchVAE(nn.Module):
             self.opt.step()
             self.opt.zero_grad()
 
-        return epoch_loss/len(dataloader), epoch_bce/len(dataloader), epoch_kll/len(dataloader)
+            if self.verbose == 1:
+                print_progress_bar(idx, len(dataloader))
+
+        return epoch_loss / len(dataloader.dataset), epoch_bce / len(dataloader.dataset), epoch_kll / len(dataloader.dataset)
 
     def _validate(self, dataloader):
         epoch_loss = 0
@@ -56,8 +61,8 @@ class PytorchVAE(nn.Module):
             batch_x, batch_y = batch
             batch_x = batch_x.to(self.device)
 
-            z, mu, std = self.encode(batch_x)
-            kll = self.lattent_reg(z, mu, std)
+            z, mu, logvar = self.encode(batch_x)
+            kll = self.lattent_reg(mu, logvar)
             xhat = self.decode(z)
             bce = self.criterion(xhat, batch_x)
             loss = bce + kll
@@ -68,7 +73,10 @@ class PytorchVAE(nn.Module):
             self.opt.step()
             self.opt.zero_grad()
 
-        return epoch_loss / len(dataloader), epoch_bce / len(dataloader), epoch_kll / len(dataloader)
+            if self.verbose == 1:
+                print_progress_bar(idx, len(dataloader))
+
+        return epoch_loss / len(dataloader.dataset), epoch_bce / len(dataloader.dataset), epoch_kll / len(dataloader.dataset)
 
     def fit(self, dataloader, n_epochs, lr, validation_data=None, verbose=1, save_criterion='loss', ckpt=None, **kwargs):
         if self.opt_type == 'sgd':

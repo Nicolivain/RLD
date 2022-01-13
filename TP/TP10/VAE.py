@@ -33,7 +33,7 @@ class VAE(PytorchVAE):
         logsigma = self.logsigma(x)
         z = mu + logsigma.exp() * torch.randn(self.lattent_space, device=self.device)
 
-        return z, mu, logsigma.exp()
+        return z, mu, 2*logsigma
 
     def decode(self, z):
         for layer in self.decoder_layers:
@@ -48,8 +48,9 @@ class VAE(PytorchVAE):
         return xhat
 
     @staticmethod
-    def lattent_reg(z, mu, std):
+    def lattent_reg(mu, logvar):
         # KL divergence for lattent space regularization
+        """
         p = torch.distributions.Normal(torch.zeros_like(mu), torch.ones_like(std))
         q = torch.distributions.Normal(mu, std)
 
@@ -58,4 +59,8 @@ class VAE(PytorchVAE):
 
         kl = (log_qzx - log_pz)
         kl = kl.sum(-1)
-        return kl.mean()
+        """
+
+        kld = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+
+        return kld
