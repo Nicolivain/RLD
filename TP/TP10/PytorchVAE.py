@@ -4,6 +4,7 @@ import os
 import torch
 import torch.nn as nn
 
+from torchvision.utils import save_image
 from progress_bar import print_progress_bar
 
 
@@ -26,6 +27,8 @@ class PytorchVAE(nn.Module):
         self.verbose  = None
         self.n_epochs = None
         self.n        = None
+
+        self.save_images_freq = None
 
     def _train_epoch(self, dataloader):
         epoch_loss = 0
@@ -73,12 +76,17 @@ class PytorchVAE(nn.Module):
             self.opt.step()
             self.opt.zero_grad()
 
+            if idx == len(dataloader) - 1 and self.save_images_freq is not None and self.n % self.save_images_freq == 0:
+                num_rows = 8
+                both = torch.cat((batch_x.view(batch_x.shape[0], 1, 28, 28)[:8], xhat.view(batch_x.shape[0], 1, 28, 28)[:8]))
+                save_image(both.cpu(), f"images/vae_epoch{self.n}.png", nrow=num_rows)
+
             if self.verbose == 1:
                 print_progress_bar(idx, len(dataloader))
 
         return epoch_loss / len(dataloader.dataset), epoch_bce / len(dataloader.dataset), epoch_kll / len(dataloader.dataset)
 
-    def fit(self, dataloader, n_epochs, lr, validation_data=None, verbose=1, save_criterion='loss', ckpt=None, **kwargs):
+    def fit(self, dataloader, n_epochs, lr, validation_data=None, verbose=1, save_images_freq=None, save_criterion='loss', ckpt=None, **kwargs):
         if self.opt_type == 'sgd':
             self.opt = torch.optim.SGD(params=self.parameters(), lr=lr)
         elif self.opt_type == 'adam':
@@ -89,6 +97,7 @@ class PytorchVAE(nn.Module):
         start_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         start_epoch = 0
         self.verbose = verbose
+        self.save_images_freq = save_images_freq
 
         if ckpt:
             state = torch.load(ckpt)

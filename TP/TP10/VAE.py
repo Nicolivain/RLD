@@ -1,4 +1,6 @@
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from PytorchVAE import PytorchVAE
 
 
@@ -9,13 +11,14 @@ class VAE(PytorchVAE):
         self.in_features = in_feature
         self.lattent_space = lattent_space
 
-        enc = [in_feature] + hidden_layers + [lattent_space]
+        enc = [in_feature] + hidden_layers
         self.encoder_layers = torch.nn.ModuleList([torch.nn.Linear(i, o) for (i, o) in zip(enc[:-1], enc[1:])])
 
-        self.mu  = torch.nn.Linear(lattent_space, lattent_space)
-        self.logsigma = torch.nn.Linear(lattent_space, lattent_space)
+        self.mu  = torch.nn.Linear(enc[-1], lattent_space)
+        self.logvar = torch.nn.Linear(enc[-1], lattent_space)
 
         enc.reverse()
+        enc = [self.lattent_space] + enc
         self.decoder_layers = torch.nn.ModuleList([torch.nn.Linear(i, o) for (i, o) in zip(enc[:-1], enc[1:])])
 
         self.relu = torch.nn.ReLU()
@@ -27,18 +30,19 @@ class VAE(PytorchVAE):
         for layer in self.encoder_layers:
             x = layer(x)
             x = self.relu(x)
-        x = self.sigmoid(x)
 
         mu  = self.mu(x)
-        logsigma = self.logsigma(x)
-        z = mu + logsigma.exp() * torch.randn(self.lattent_space, device=self.device)
+        logvar = self.logvar(x)
 
-        return z, mu, 2*logsigma
+        std = torch.exp(0.5 * logvar)  # standard deviation
+        eps = torch.randn_like(std)  # `randn_like` as we need the same size
+        z = mu + (eps * std)  # sampling as if coming from the input spac
+
+        return z, mu, logvar
 
     def decode(self, z):
         for layer in self.decoder_layers:
             z = layer(z)
-            z = self.relu(z)
         z = self.sigmoid(z)
         return z
 
@@ -50,17 +54,5 @@ class VAE(PytorchVAE):
     @staticmethod
     def lattent_reg(mu, logvar):
         # KL divergence for lattent space regularization
-        """
-        p = torch.distributions.Normal(torch.zeros_like(mu), torch.ones_like(std))
-        q = torch.distributions.Normal(mu, std)
-
-        log_qzx = q.log_prob(z)
-        log_pz = p.log_prob(z)
-
-        kl = (log_qzx - log_pz)
-        kl = kl.sum(-1)
-        """
-
         kld = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-
         return kld
