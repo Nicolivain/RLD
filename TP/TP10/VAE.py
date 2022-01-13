@@ -1,14 +1,13 @@
 import torch
+from PytorchVAE import PytorchVAE
 
 
-class VAE(torch.nn.Module):
-    def __init__(self, in_feature, lattent_space, hidden_layers=[], device='cpu'):
-        super().__init__()
+class VAE(PytorchVAE):
+    def __init__(self, in_feature, lattent_space, hidden_layers=[], device='cpu', logger=None):
+        super().__init__(device=device, logger=logger)
 
         self.in_features = in_feature
         self.lattent_space = lattent_space
-
-        self.device = device
 
         enc = [in_feature] + hidden_layers + [lattent_space]
         self.encoder_layers = torch.nn.ModuleList([torch.nn.Linear(i, o) for (i, o) in zip(enc[:-1], enc[1:])])
@@ -49,7 +48,7 @@ class VAE(torch.nn.Module):
         return xhat
 
     @staticmethod
-    def kl_divergence(z, mu, std):
+    def lattent_reg(z, mu, std):
         # KL divergence for lattent space regularization
         p = torch.distributions.Normal(torch.zeros_like(mu), torch.ones_like(std))
         q = torch.distributions.Normal(mu, std)
