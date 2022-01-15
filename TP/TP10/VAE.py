@@ -5,8 +5,8 @@ from PytorchVAE import PytorchVAE
 
 
 class VAE(PytorchVAE):
-    def __init__(self, in_feature, lattent_space, hidden_layers=[], device='cpu', logger=None):
-        super().__init__(device=device, logger=logger)
+    def __init__(self, in_feature, lattent_space, hidden_layers=[], device='cpu', logger=None, tag=''):
+        super().__init__(device=device, logger=logger, tag=tag)
 
         self.in_features = in_feature
         self.lattent_space = lattent_space
@@ -59,8 +59,8 @@ class VAE(PytorchVAE):
 
 
 class ConvVAE(PytorchVAE):
-    def __init__(self, image_shape, in_channels, lattent_space, hidden_filters=[], kernel_size=(2, 2), strides=(1, 1), device='cpu', logger=None):
-        super().__init__(device=device, logger=logger)
+    def __init__(self, image_shape, in_channels, lattent_space, hidden_filters=[], kernel_size=(2, 2), strides=(1, 1), device='cpu', logger=None, tag=''):
+        super().__init__(device=device, logger=logger, tag=tag)
 
         self.image_shape = image_shape
         self.n_pixel = image_shape[0] * image_shape[1]

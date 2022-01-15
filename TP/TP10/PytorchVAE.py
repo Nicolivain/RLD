@@ -9,7 +9,7 @@ from progress_bar import print_progress_bar
 
 
 class PytorchVAE(nn.Module):
-    def __init__(self, criterion='bce', logger=None, opt='adam', device='cpu', ckpt_save_path=None):
+    def __init__(self, criterion='bce', logger=None, opt='adam', device='cpu', ckpt_save_path=None, tag=''):
         super().__init__()
         self.opt_type = opt if opt in ['sgd', 'adam'] else ValueError
         self.opt = None
@@ -27,6 +27,7 @@ class PytorchVAE(nn.Module):
         self.verbose  = None
         self.n_epochs = None
         self.n        = None
+        self.tag      = tag
 
         self.save_images_freq = None
 
@@ -79,7 +80,7 @@ class PytorchVAE(nn.Module):
             if idx == len(dataloader) - 1 and self.save_images_freq is not None and self.n % self.save_images_freq == 0:
                 num_rows = 8
                 both = torch.cat((batch_x.view(batch_x.shape[0], 1, 28, 28)[:8], xhat.view(batch_x.shape[0], 1, 28, 28)[:8]))
-                save_image(both.cpu(), f"images/vae_epoch{self.n}.png", nrow=num_rows)
+                save_image(both.cpu(), f"TP/TP10/images/vae_epoch{self.n}{self.tag}.png", nrow=num_rows)  # TODO: make this not hardcoded
 
             if self.verbose == 1:
                 print_progress_bar(idx, len(dataloader))
@@ -145,7 +146,7 @@ class PytorchVAE(nn.Module):
         self.state['state_dict'] = self.state_dict()
         if not os.path.exists(self.ckpt_save_path):
             os.mkdir(self.ckpt_save_path)
-        torch.save(self.state, os.path.join(self.ckpt_save_path, f'ckpt_{self.start_time}_epoch{n}.ckpt'))
+        torch.save(self.state, os.path.join(self.ckpt_save_path, f'ckpt_{self.tag}{self.start_time}_epoch{n}.ckpt'))
 
     def load(self, ckpt_path):
         state = torch.load(ckpt_path)
