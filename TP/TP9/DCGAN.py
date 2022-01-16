@@ -44,7 +44,7 @@ class Discriminator(nn.Module):
 
 
 class Generator(nn.Module):
-    def __init__(self, nz, ngf):
+    def __init__(self, nz, ngf, nc):
         super(Generator, self).__init__()
         self.main = nn.Sequential(
             # input is Z, going into a convolution
@@ -86,7 +86,7 @@ class DCGAN(PytorchGAN):
 
         self.generator_input_shape = [self.lattent_space_size, 1, 1]
 
-        self.generator     = Generator(self.lattent_space_size, self.n_gen_filters)
+        self.generator     = Generator(self.lattent_space_size, self.n_gen_filters, self.n_channels)
         self.discriminator = Discriminator(self.n_channels, self.n_disc_filters)
 
         self.to(self.device)
