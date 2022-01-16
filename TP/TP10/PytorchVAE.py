@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 
 from torchvision.utils import save_image
-from progress_bar import print_progress_bar
+from Tools.progress_bar import print_progress_bar
 
 
 class PytorchVAE(nn.Module):
