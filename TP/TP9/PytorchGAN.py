@@ -49,9 +49,10 @@ class PytorchGAN(nn.Module):
 
             # Compute the loss the for the discriminator with real images
             self.discriminator.zero_grad()
-            label = torch.full(batch_size, 1, dtype=torch.float, device=self.device)
+            label = torch.full((batch_size,), 1, dtype=torch.float, device=self.device)
             real_disc_out = self.discriminator(batch_x).view(-1)
             disc_real_loss = self.criterion(real_disc_out, label)
+            disc_real_loss.backward()
 
             # Compute the loss the for the discriminator with fake images
             noise_shape = [batch_size] + list(self.generator_input_shape)
@@ -60,10 +61,8 @@ class PytorchGAN(nn.Module):
             label.fill_(-1)  # changing the label
             fake_disc_out = self.discriminator(fake_images.detach()).view(-1)  # we do not backprop on the generator
             disc_fake_loss = self.criterion(fake_disc_out, label)
-
-            # Finally back prop on disc
-            disc_real_loss.backward()
             disc_fake_loss.backward()
+
             disc_tot_loss = disc_real_loss + disc_fake_loss
             self.optD.step()
 

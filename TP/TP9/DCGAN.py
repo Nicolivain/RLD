@@ -92,5 +92,10 @@ class DCGAN(PytorchGAN):
         self.to(self.device)
 
     def generate(self, noise):
-        noise = noise.view([-1] + self.generator_input_shape).to(self.device)
-        return self.generator(noise)
+        with torch.no_grad():
+            noise = noise.view([-1] + self.generator_input_shape).to(self.device)
+            return self.generator(noise)
+
+    def discriminate(self, images):
+        with torch.no_grad():
+            return self.discriminator(images)
