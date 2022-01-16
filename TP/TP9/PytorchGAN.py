@@ -111,7 +111,7 @@ class PytorchGAN(nn.Module):
 
             disc_tot_loss = disc_real_loss + disc_fake_loss
 
-            # Training the generator
+            # Training the generator is not different now (no need to backprop)
             gen_loss = disc_fake_loss
 
             # Update running losses
@@ -155,26 +155,25 @@ class PytorchGAN(nn.Module):
         self.n_epochs = n_epochs
         for n in range(start_epoch, n_epochs):
             self.n = n
-            train_loss, train_bce, train_kll = self._train_epoch(dataloader)
+            t_disc_real_loss, t_disc_fake_loss, t_disc_total_loss, t_gen_loss = self._train_epoch(dataloader)
             val_loss, val_bce, val_kll = 0, 0, 0
             if validation_data is not None:
                 with torch.no_grad():
-                    val_loss, val_bce, val_kll = self._validate(validation_data)
+                    v_disc_real_loss, v_disc_fake_loss, v_disc_total_loss, v_gen_loss = self._validate(validation_data)
 
-            epoch_result = {'loss': train_loss, 'bce': train_bce, 'kll': train_kll, 'v_loss': val_loss, 'v_bce': val_bce, 'v_kll': val_kll}
+            epoch_result = {'train_disc_real_loss': t_disc_real_loss, 'train_disc_fake_loss': t_disc_real_loss, 'train_disc_total_loss': t_disc_total_loss, 'train_gen_loss': t_gen_loss,
+                            'val_disc_real_loss': v_disc_real_loss, 'val_disc_fake_loss': v_disc_real_loss, 'val_disc_total_loss': v_disc_total_loss, 'val_gen_loss': v_gen_loss}
             if self.log:
-                self.log('Train loss', train_loss, n)
-                self.log('Val loss', val_loss, n)
-                # TODO logging
+                for k, v in epoch_result.items():
+                    self.log(k, v, n)
 
             if epoch_result[save_criterion] <= self.best_criterion[save_criterion]:
-                # TODO saving res
                 self.best_criterion = epoch_result
                 self.__save_state(n)
 
             if n % verbose == 0:
-                # TODO verbose
-                print('Epoch {:3d} loss: {:1.4f} BCE loss: {:1.4f} KLL loss {:1.4f} | Validation loss: {:1.4f} BCE loss: {:1.4f} KLL loss {:1.4f} | Best epoch {:3d}'.format(n, train_loss, train_bce, train_kll, val_loss, val_bce, val_kll, self.best_epoch))
+                print('Epoch {:3d} Gen loss: {:1.4f} Disc loss: {:1.4f} Disc real loss {:1.4f} Disc fake loss {:1.4f} | Validation Gen loss: {:1.4f} Disc loss: {:1.4f} Disc real loss {:1.4f} Disc fake loss {:1.4f} | Best epoch {:3d}'.format(
+                    n, t_gen_loss, t_disc_total_loss, t_disc_real_loss, t_disc_fake_loss, v_gen_loss, v_disc_total_loss, v_disc_real_loss, v_disc_fake_loss, self.best_epoch))
 
             if self.ckpt_save_path:
                 self.state['lr'] = lr
