@@ -19,7 +19,7 @@ class PytorchVAE(nn.Module):
         self.state = {}
         self.criterion = nn.MSELoss(reduction='sum') if criterion == 'mse' else nn.BCELoss(reduction='sum') if criterion == 'bce' else criterion
 
-        self.best_criterion = {'loss' : 10**10,  'v_loss': 10**10, 'acc': -1, 'v_acc': -1}
+        self.best_criterion = {'loss': 10**10, 'bce': 10**10, 'kll': 10**10, 'v_loss': 10**10, 'v_bce': 10**10, 'v_kll': 10**10}
         self.best_model = None
         self.best_epoch = None
 
