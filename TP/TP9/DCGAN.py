@@ -89,6 +89,8 @@ class DCGAN(PytorchGAN):
         self.generator     = Generator(self.lattent_space_size, self.n_gen_filters, self.n_channels)
         self.discriminator = Discriminator(self.n_channels, self.n_disc_filters)
 
+        self.generator.to(self.device)
+        self.discriminator.to(self.device)
         self.to(self.device)
 
     def generate(self, noise):
