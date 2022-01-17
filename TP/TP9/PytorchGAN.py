@@ -59,7 +59,7 @@ class PytorchGAN(nn.Module):
             noise_shape = [batch_size] + list(self.generator_input_shape)
             noise = torch.randn(noise_shape, device=self.device)
             fake_images = self.generator(noise)
-            label.fill_(-1)  # changing the label
+            label.fill_(0)  # changing the label
             fake_disc_out = self.discriminator(fake_images.detach()).view(-1)  # we do not backprop on the generator
             disc_fake_loss = self.criterion(fake_disc_out, label)
             disc_fake_loss.backward()
