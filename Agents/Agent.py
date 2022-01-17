@@ -32,6 +32,9 @@ class Agent(ABC):
     def store(self, transition):
         pass
 
+    def time_to_learn(self):
+        return True
+
     def save(self, path):
         # TODO: fix the save bug
         """

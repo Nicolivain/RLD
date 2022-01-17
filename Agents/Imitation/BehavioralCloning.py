@@ -28,9 +28,14 @@ class BehavioralCloning(Agent):
 
     def learn(self, done):
         running_loss = 0
-        for i in range(self.expert_actions.shape[0]//self.batch_size):
-            s = self.expert_states[100*i:100*(i+1), :]
-            a = self.expert_actions[100*i:100*(i+1), :]
+        n_expert_sample = self.expert_states.shape[0]
+        final_batch = 1 if n_expert_sample % self.batch_size != 0 else 0
+        for i in range(n_expert_sample // self.batch_size + final_batch):
+            start_idx = i * self.batch_size
+            end_idx = min(n_expert_sample, (i + 1) * self.batch_size)
+
+            s = self.expert_states[start_idx:end_idx, :]
+            a = self.expert_actions[start_idx:end_idx, :]
 
             output = self.model(s)
             loss = self.loss(output, a)
@@ -39,7 +44,7 @@ class BehavioralCloning(Agent):
             self.optim.step()
             running_loss += loss.item()
 
-        return {'loss': running_loss / (self.expert_actions.shape[0]//self.batch_size)}
+        return {'loss': running_loss / (n_expert_sample // self.batch_size + final_batch)}
 
     def time_to_learn(self):
         if self.test:
