@@ -1,0 +1,4 @@
+batch_size: 50
+discount: 0.99  # gamma
+learning_rate: 0.001
+expert_data_path: 'TP/TP12/expert/expert.pkl'
