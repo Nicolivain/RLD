@@ -25,7 +25,7 @@ ndf = 64
 nz  = 100
 ngf = 64
 
-path = os.path.abspath("../../../data")
+path = os.path.abspath("../../data")
 dataset = dset.MNIST(root=path,
                      download=True,
                      transform=transforms.Compose([
