@@ -77,7 +77,7 @@ class Generator(nn.Module):
 
 class DCGAN_32(PytorchGAN):
     def __init__(self, n_channels, lattent_space_size, n_disc_filters, n_gen_filters, criterion='bce', logger=None, opt='adam', device='cpu', ckpt_save_path=None, tag=''):
-        super().__init__(criterion='bce', logger=None, opt='adam', device=device, ckpt_save_path=None, tag='')
+        super().__init__(criterion='bce', logger=logger, opt='adam', device=device, ckpt_save_path=None, tag='')
 
         self.n_channels          = n_channels
         self.lattent_space_size  = lattent_space_size
