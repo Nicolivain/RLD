@@ -43,7 +43,7 @@ print('Device: ', device)
 batch_size = 128
 dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=1)
 
-model = DCGAN_32(n_channels=nc, lattent_space_size=nz, n_disc_filters=ndf, n_gen_filters=ngf, device=device)
+model = DCGAN_32(n_channels=nc, lattent_space_size=nz, n_disc_filters=ndf, n_gen_filters=ngf, device=device, logger=writer.add_scalar)
 
 model.fit(dataloader, n_epochs=50, lr=1e-3)
 
