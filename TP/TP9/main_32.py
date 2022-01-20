@@ -45,7 +45,7 @@ dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle
 
 model = DCGAN_32(n_channels=nc, lattent_space_size=nz, n_disc_filters=ndf, n_gen_filters=ngf, device=device)
 
-model.fit(dataloader, n_epochs=5, lr=1e-3)
+model.fit(dataloader, n_epochs=50, lr=1e-3)
 
 noise = torch.randn(32, nz, 1, 1, device=device)
 fake = model.generate(noise)
