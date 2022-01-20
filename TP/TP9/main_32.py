@@ -10,7 +10,7 @@ import torch.utils.data
 import torchvision.datasets as dset
 import torchvision.utils as vutils
 
-from DCGAN_32 import DCGAN_32
+from TP.TP9.DCGAN_32 import DCGAN_32
 
 
 logging.basicConfig(level=logging.INFO)
