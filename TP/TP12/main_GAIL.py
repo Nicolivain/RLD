@@ -35,7 +35,7 @@ if __name__ == '__main__':
     env, config, outdir, logger = init('Config/env_config/config_random_lunar.yaml', 'GAIL', outdir=None,
                                        copy_config=False, launch_tb=False)
     params = load_model_params('GAIL', env, config)
-    agent = BehavioralCloning
+    agent = GAIL
 
     xp = Trainer(agent          = agent,
                  env            = env,

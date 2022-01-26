@@ -14,8 +14,10 @@ Hyperparameters of each algorithm can be tuned in 'Config/model_parameters', and
 - Deep Q Learning (minDQN), DuelingDQN
 - Actor Critic A2C
 - Trusted Region Actor Critic PPO and Clipped PPO
-- DDPG
+- DDPG, Multi Agent DDPG
 - SAC, Adaptative Temperature SAC
+- Imitation Learning (GAIL)
+- GAN, VAE
 
 ### Environnement:
 Grid World, Cartpole, Lunar Lander, Pendulum
