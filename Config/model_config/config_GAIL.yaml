@@ -1,13 +1,13 @@
-batch_size: 100
-disc_batch_size: 50
+batch_size: 1000
+disc_batch_size: 500
 memory_size: 5000
-discount: 0.99  # gamma
-learning_rate: 0.001
+discount: 0.98  # gamma
+learning_rate: 0.0003
 expert_data_path: 'TP/TP12/expert/expert.pkl'
 
-k: 20
+k: 10
 delta: 0.001
-layers: [10, 10]
+layers: [120]
 use_dkl: True
 reversed_dkl: True
 epsilon: 0.01
