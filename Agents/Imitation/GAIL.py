@@ -67,12 +67,12 @@ class GAIL(AdaptativePPO):
         b_done = batches['done'].view(bs, -1)
 
         x = torch.cat([b_obs, self.__to_one_hot(b_action)], dim=1)
-        adv_reward = self.discriminator(x)
 
         with torch.no_grad():
             # compute policy and value
             pi = self.model.policy(b_obs)
             action_pi = pi.gather(-1, b_action.reshape(-1, 1).long())
+            adv_reward = self.discriminator(x)
 
         avg_policy_loss = 0
         for i in range(self.k):
@@ -106,8 +106,7 @@ class GAIL(AdaptativePPO):
     def _compute_objective(self, advantage, pi, new_pi, new_action_pi, action_pi):
 
         # on utilise torch.clamp pour le clipping
-        clipped = torch.minimum(advantage * new_action_pi / action_pi,
-                                advantage * torch.clamp(new_action_pi / action_pi, 1 - self.epsilon, 1 + self.epsilon))
+        clipped = torch.minimum(advantage * new_action_pi / action_pi, advantage * torch.clamp(new_action_pi / action_pi, 1 - self.epsilon, 1 + self.epsilon))
         advantage_loss = -torch.mean(clipped)
 
         return advantage_loss
