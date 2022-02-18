@@ -15,10 +15,9 @@ if __name__ == '__main__':
     torch.manual_seed(1)
     numpy.random.seed(1)
 
-    env, config, outdir, logger = init('Config/env_config/config_random_lunar.yaml', 'GAIL', outdir=None,
-                                       copy_config=False, launch_tb=False)
-    params = load_model_params('GAIL', env, config)
-    agent = GAIL
+    env, config, outdir, logger = init('Config/env_config/config_random_lunar.yaml', 'BehaviouralCloning', outdir=None, copy_config=False, launch_tb=False)
+    params = load_model_params('BC', env, config)
+    agent = BehavioralCloning
 
     xp = Trainer(agent          = agent,
                  env            = env,
