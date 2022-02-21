@@ -9,6 +9,7 @@ from datetime import datetime
 import gym
 import yaml
 from torch.utils.tensorboard import SummaryWriter
+from multiagent import *
 
 
 def loadTensorBoard(outdir):
@@ -204,10 +205,77 @@ def init(config_file, algoName, outdir=None, copy_config=True, launch_tb=True):
 
     return env, config, outdir, logger
 
+########## MADDPG config & env maker ###############
 
-def load_model_params(model_tag, env, config):
+def make_env(scenario_name, benchmark=False):
+    '''
+    Creates a MultiAgentEnv object as env. This can be used similar to a gym
+    environment by calling env.reset() and env.step().
+    Use env.render() to view the environment on the screen.
+
+    Input:
+        scenario_name   :   name of the scenario from ./scenarios/ to be Returns
+                            (without the .py extension)
+        benchmark       :   whether you want to produce benchmarking data
+                            (usually only done during evaluation)
+
+    Some useful env properties (see environment.py):
+        .observation_space  :   Returns the observation space for each agent
+        .action_space       :   Returns the action space for each agent
+        .n                  :   Returns the number of Agents
+    '''
+    from multiagent.environment import MultiAgentEnv
+    import multiagent.scenarios as scenarios
+
+    # load scenario from script
+    scenario = scenarios.load(scenario_name + ".py").Scenario()
+    # create world
+    world = scenario.make_world()
+    # create multiagent environment
+    world.dim_c = 0
+    if benchmark:
+        env = MultiAgentEnv(world, scenario.reset_world, scenario.reward, scenario.observation, scenario.benchmark_data)
+    else:
+        env = MultiAgentEnv(world, scenario.reset_world, scenario.reward, scenario.observation)
+    env.discrete_action_space = False
+    env.discrete_action_input = False
+    scenario.reset_world(world)
+    return env,scenario,world
+
+def init_MADDPG(config_file, algoName, outdir=None, copy_config=True, launch_tb=True):
+
+    config = load_yaml(config_file)
+    env, scenario, world = make_env(config["env"])
+    if config.get("import") is not None:
+        exec(config["import"])
+
+    if config.get("execute") is not None:
+        exec(config["execute"])
+
+    now = datetime.now()
+    date_time = now.strftime("%d-%m-%Y-%HH%M-%SS")
+
+    if outdir is None:
+        outdir = "./XP/" + config["env"] + "/" + algoName + "_" + date_time
+
+    print("Saving in " + outdir)
+    os.makedirs(outdir, exist_ok=True)
+    save_src(os.path.abspath(outdir))
+    if copy_config:
+        write_yaml(os.path.join(outdir, 'config.yaml'), config)
+    logger = LogMe(SummaryWriter(outdir))
+    if launch_tb:
+        loadTensorBoard(outdir)
+
+    return env, scenario, world, config, outdir, logger
+
+
+def load_model_params(model_tag, env, config, world=None):
     with open(f'Config/model_config/config_{model_tag}.yaml', 'r') as f:
         params = yaml.safe_load(f)
     params['env'] = env
     params['opt'] = config
+    if world is not None :
+        params['world'] = world
     return params
+
