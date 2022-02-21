@@ -40,13 +40,13 @@ class FeatureExtractor(object):
 class NothingToDo(FeatureExtractor):
     def __init__(self, env):
         super().__init__()
-        ob = env.reset()
+        ob = torch.tensor(np.array(env.reset()))
         ob = ob.reshape(-1)
         self.outSize = len(ob)
 
     def getFeatures(self, obs):
         # print(obs)
-        return obs
+        return np.array(obs)
 
 # Ajoute le numero d'iteration (a priori pas vraiment utile et peut
 # destabiliser dans la plupart des cas etudiés)
@@ -313,7 +313,7 @@ class convMDP(nn.Module):
 # Accepte une liste de tailles de couches pour la variables layers (permet
 # de définir la structure)
 class NN(nn.Module):
-    def __init__(self, in_size, out_size, layers=[], final_activation=None, activation=nn.Tanh(), dropout=0.0):
+    def __init__(self, in_size, out_size, layers=[], final_activation=None, activation=nn.Tanh(), dropout=0.0, batchnorm = True):
         super(NN, self).__init__()
         self.layers = nn.ModuleList([])
         for x in layers:
@@ -325,6 +325,9 @@ class NN(nn.Module):
         self.dropout = None
         if dropout > 0:
             self.dropout = torch.nn.Dropout(dropout)
+        if batchnorm :
+            self.batchnorm_test = batchnorm
+            self.batchnorm = nn.BatchNorm1d(in_size)
 
     def setcuda(self, device):
         self.cuda(device=device)
@@ -332,6 +335,8 @@ class NN(nn.Module):
     def forward(self, x):
         x = self.layers[0](x)
         for i in range(1, len(self.layers)):
+            if self.batchnorm_test:
+                x = self.batchnorm(x)
             x = self.activation(x)
             if self.dropout is not None:
                 x = self.dropout(x)
