@@ -54,7 +54,7 @@ class GlowModule(FlowModule):
         sh = self.shift(ync)
         yc = yc * sc.exp() + sh
         y = torch.cat([ync, yc], axis=1)
-        log_det += sc.sum()
+        log_det += sc.mean()  # bc shape is 1000,1
 
         # conv
         y = y @ self._get_weight()
@@ -73,7 +73,7 @@ class GlowModule(FlowModule):
         sh = self.shift(y[:, y.shape[1] // 2:])
         yc = (yc - sh) * (-sc).exp()
         y = torch.cat([ync, yc], axis=1)
-        log_det += sc.sum()
+        log_det += sc.mean()
 
         # conv
         y = y @ self._get_weight().inverse()
