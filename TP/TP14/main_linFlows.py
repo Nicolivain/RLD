@@ -1,13 +1,18 @@
+import os
 import torch
 import logging
 import datetime
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 from torch.utils.tensorboard import SummaryWriter
 from linearFlow import LinFlowModule
 from utils import GenerativeFlow
 
+
 logging.basicConfig(level=logging.INFO)
 start_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-save_path = "TP/TP14/runs/tag-" + start_time + '_lin'
+save_path = "runs/tag-" + start_time + '_lin'
 writer = SummaryWriter(save_path)
 
 mu    = torch.Tensor([0, 0, 0])
@@ -15,7 +20,7 @@ sigma = torch.Tensor([1, 2, 3])
 in_features = 3
 bs = 1000
 n = 3
-lr = 0.002
+lr = 0.001
 epochs = 1000
 
 prior = torch.distributions.normal.Normal(torch.zeros(in_features), torch.ones(in_features))
@@ -35,4 +40,17 @@ for e in range(epochs):
     loss = - (logprob + logdet).mean()
     loss.backward()
     optim.step()
-    print(f'Negative Likelihood: ', loss.item())
+    writer.add_scalar('Negative Likelihood', loss.item(), e)
+    print('Negative Likelihood: ', loss.item())
+
+ds = 10000
+z = prior.sample((ds,))
+t = posterior.sample((ds,))
+with torch.no_grad():
+    y, _ = mod.invf(z)
+for d in range(in_features):
+    sns.kdeplot(data=y[-1][:, d], label='posterior')
+    sns.kdeplot(data=t[:, d], label='target posterior')
+    plt.legend(loc='upper right')
+    plt.savefig(os.path.join(save_path, f'kdeplot_dim{d}.png'))
+    plt.show()
