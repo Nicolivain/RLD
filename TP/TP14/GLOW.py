@@ -1,6 +1,8 @@
 import torch
 from utils import FlowModule, MLP
 
+logabs = lambda x: torch.log(torch.abs(x))
+
 
 class GlowModule(FlowModule):
     def __init__(self, in_features):
@@ -19,16 +21,27 @@ class GlowModule(FlowModule):
         self.shift = MLP(self.in_features//2, self.in_features - self.in_features//2, 100)
 
         # lu convolution
-        init = torch.nn.init.orthogonal_(torch.randn(self.in_features, self.in_features))
-        d = torch.lu(init)
-        self.p, l, u = torch.lu_unpack(d[0], d[1])
-        self.ud = torch.nn.Parameter(torch.diag(u))
-        self.u = torch.nn.Parameter(torch.triu(u, 1))
-        self.l = torch.nn.Parameter(torch.tril(u, -1))
-        self.id = torch.eye(self.in_features)
+        weight = torch.randn(self.in_features, self.in_features)
+        weight = torch.nn.init.orthogonal_(weight)
+        d = torch.lu(weight)
+        w_p, w_l, w_u = torch.lu_unpack(d[0], d[1])
+        w_s = torch.diag(w_u)
+        w_u = torch.triu(w_u, 1)
+        u_mask = torch.triu(torch.ones_like(w_u), 1)
+        l_mask = u_mask.T
+
+        self.register_buffer("w_p", w_p)
+        self.register_buffer("u_mask", u_mask)
+        self.register_buffer("l_mask", l_mask)
+        self.register_buffer("s_sign", torch.sign(w_s))
+        self.register_buffer("l_eye", torch.eye(l_mask.shape[0]))
+        self.w_l = torch.nn.Parameter(w_l)
+        self.w_s = torch.nn.Parameter(logabs(w_s))
+        self.w_u = torch.nn.Parameter(w_u)
 
     def _get_weight(self):
-        return self.p @ (self.l + self.id) @ (self.u + torch.diag(self.ud))
+        weight = self.w_p @ (self.w_l * self.l_mask + self.l_eye) @ ((self.w_u * self.u_mask) + torch.diag(self.s_sign * torch.exp(self.w_s)))
+        return weight
 
     def f(self, x):
         # linear
@@ -45,7 +58,7 @@ class GlowModule(FlowModule):
 
         # conv
         y = y @ self._get_weight()
-        log_det += self.ud.abs().log().sum()
+        log_det += self.w_s.sum()
 
         return y, log_det
 
@@ -55,16 +68,16 @@ class GlowModule(FlowModule):
         log_det = self.s.sum()
 
         # coupling layer
-        ync, yc = y[:, :y.shape[1] // 2 + 1], y[:, y.shape[1] // 2 + 1:]
+        ync, yc = y[:, :y.shape[1] // 2], y[:, y.shape[1] // 2:]
         sc = self.scale(ync)
-        sh = self.shift(y[:, y.shape[1] // 2 + 1:])
+        sh = self.shift(y[:, y.shape[1] // 2:])
         yc = (yc - sh) * (-sc).exp()
         y = torch.cat([ync, yc], axis=1)
         log_det += sc.sum()
 
         # conv
         y = y @ self._get_weight().inverse()
-        log_det += self.ud.abs().log().sum()
+        log_det += self.w_s.sum()
 
         log_det = 1 / log_det
         return y, log_det

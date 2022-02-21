@@ -24,8 +24,8 @@ sigma = torch.Tensor([1, 2, 3])
 in_features = 2
 bs = 1000
 n = 10
-lr = 0.00003
-epochs = 1000
+lr = 0.0001
+epochs = 10
 
 if data == 'circles':
     data, _ = datasets.make_circles(n_samples=n_samples, factor=0.5, noise=0.05, random_state=0)
@@ -54,3 +54,13 @@ for e in range(epochs):
         optim.step()
         writer.add_scalar('Negative Likelihood', loss.item(), e)
         print('Negative Likelihood: ', loss.item())
+
+
+prior_sample = prior.sample((n_samples,))
+with torch.no_grad():
+    output, _ = mod.invf(prior_sample)
+plt.scatter(output[-1][:, 0], output[-1][:, 1])
+plt.show()
+plt.clf()
+plt.scatter(data[:, 0], data[:, 1])
+plt.show()
