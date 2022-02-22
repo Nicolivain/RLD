@@ -4,23 +4,59 @@ from utils import FlowModule, MLP
 logabs = lambda x: torch.log(torch.abs(x))
 
 
-class GlowModule(FlowModule):
+class ActNorm(FlowModule):
     def __init__(self, in_features):
         super().__init__()
         self.in_features = in_features
 
-        # act norm
         self.s = torch.randn(self.in_features)
         self.t = torch.randn(self.in_features)
         with torch.no_grad():
             self.s = torch.nn.Parameter((self.s - self.s.mean()) / self.s.std())
             self.t = torch.nn.Parameter((self.t - self.t.mean()) / self.t.std())
 
-        # coupling layer
-        self.scale = MLP(self.in_features//2, self.in_features - self.in_features//2, 100)
-        self.shift = MLP(self.in_features//2, self.in_features - self.in_features//2, 100)
+    def f(self, x):
+        y = x * self.s.exp() + self.t
+        log_det = self.s.sum()
+        return y, log_det
 
-        # lu convolution
+    def invf(self, x):
+        y = (x - self.t) * (-self.s).exp()
+        log_det = 1/self.s.sum()
+        return y, log_det
+
+
+class CouplingLayer(FlowModule):
+    def __init__(self, in_features):
+        super().__init__()
+        self.in_features = in_features
+        self.scale = MLP(self.in_features // 2, self.in_features - self.in_features // 2, 100)
+        self.shift = MLP(self.in_features // 2, self.in_features - self.in_features // 2, 100)
+
+    def f(self, x):
+        ync, yc = x[:, :x.shape[1] // 2], x[:, x.shape[1] // 2:]
+        sc = self.scale(ync)
+        sh = self.shift(ync)
+        yc = yc * sc.mean().exp() + sh
+        y = torch.cat([ync, yc], axis=1)
+        log_det = sc.mean()  # bc shape is 1000,1
+        return y, log_det
+
+    def invf(self, x):
+        ync, yc = x[:, :x.shape[1] // 2], x[:, x.shape[1] // 2:]
+        sc = self.scale(ync)
+        sh = self.shift(x[:, x.shape[1] // 2:])
+        yc = (yc - sh) * (-sc.mean()).exp()
+        y = torch.cat([ync, yc], axis=1)
+        log_det = 1/sc.mean()
+        return y, log_det
+
+
+class LuConv(FlowModule):
+    def __init__(self, in_features):
+        super().__init__()
+        self.in_features = in_features
+
         weight = torch.randn(self.in_features, self.in_features)
         weight = torch.nn.init.orthogonal_(weight)
         d = torch.lu(weight)
@@ -44,40 +80,37 @@ class GlowModule(FlowModule):
         return weight
 
     def f(self, x):
+        y = x @ self._get_weight()
+        log_det = self.w_s.sum()
+        return y, log_det
+
+    def invf(self, x):
+        y = x @ self._get_weight().inverse()
+        log_det = self.w_s.sum()
+        return y, log_det
+
+
+class GlowModule(FlowModule):
+    def __init__(self, in_features):
+        super().__init__()
+        self.in_features = in_features
+
+        self.act_norm = ActNorm(self.in_features)
+        self.coupling = CouplingLayer(self.in_features)
+        self.luconv   = LuConv(self.in_features)
+
+    def f(self, x):
         # linear
-        y = x * self.s.exp() + self.t
-        log_det = self.s.sum()
-
-        # coupling
-        ync, yc = y[:, :y.shape[1]//2], y[:, y.shape[1]//2:]
-        sc = self.scale(ync)
-        sh = self.shift(ync)
-        yc = yc * sc.exp() + sh
-        y = torch.cat([ync, yc], axis=1)
-        log_det += sc.mean()  # bc shape is 1000,1
-
-        # conv
-        y = y @ self._get_weight()
-        log_det += self.w_s.sum()
-
+        y, log_det = self.act_norm.f(x)
+        y, nld  = self.luconv.f(y)
+        y, nnld = self.coupling.f(y)
+        log_det = log_det + nld + nnld
         return y, log_det
 
     def invf(self, x):
         # linear
-        y = (x - self.t) * (-self.s).exp()
-        log_det = self.s.sum()
-
-        # coupling layer
-        ync, yc = y[:, :y.shape[1] // 2], y[:, y.shape[1] // 2:]
-        sc = self.scale(ync)
-        sh = self.shift(y[:, y.shape[1] // 2:])
-        yc = (yc - sh) * (-sc).exp()
-        y = torch.cat([ync, yc], axis=1)
-        log_det += sc.mean()
-
-        # conv
-        y = y @ self._get_weight().inverse()
-        log_det += self.w_s.sum()
-
-        log_det = 1 / log_det
+        y, log_det = self.act_norm.invf(x)
+        y, nld  = self.luconv.invf(y)
+        y, nnld = self.coupling.invf(y)
+        log_det = log_det + nld + nnld
         return y, log_det

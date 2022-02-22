@@ -15,13 +15,13 @@ start_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 save_path = "runs/tag-" + start_time + '_lin'
 writer = SummaryWriter(save_path)
 
-mu    = torch.Tensor([0, 0, 0])
-sigma = torch.Tensor([1, 2, 3])
+mu    = torch.Tensor([1, 2, 3])
+sigma = torch.Tensor([4, 5, 6])
 in_features = 3
 bs = 1000
 n = 3
 lr = 0.001
-epochs = 1000
+epochs = 10000
 
 prior = torch.distributions.normal.Normal(torch.zeros(in_features), torch.ones(in_features))
 posterior = torch.distributions.normal.Normal(mu, sigma)

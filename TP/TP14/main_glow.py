@@ -19,13 +19,11 @@ writer = SummaryWriter(save_path)
 
 data = ['circles', 'moons'][0]
 n_samples = 10000
-mu    = torch.Tensor([0, 0, 0])
-sigma = torch.Tensor([1, 2, 3])
 in_features = 2
 bs = 1000
 n = 10
-lr = 0.0001
-epochs = 10
+lr = 0.001
+epochs = 200
 
 if data == 'circles':
     data, _ = datasets.make_circles(n_samples=n_samples, factor=0.5, noise=0.05, random_state=0)
@@ -35,10 +33,8 @@ else:
     raise ValueError('Unknown dataset')
 
 prior = torch.distributions.normal.Normal(torch.zeros(in_features), torch.ones(in_features))
-posterior = torch.distributions.normal.Normal(mu, sigma)
 
 prior = torch.distributions.independent.Independent(prior, 1)
-posterior = torch.distributions.independent.Independent(posterior, 1)
 
 mod = GenerativeFlow(prior, *[GlowModule(in_features) for _ in range(n)])
 
@@ -60,7 +56,9 @@ prior_sample = prior.sample((n_samples,))
 with torch.no_grad():
     output, _ = mod.invf(prior_sample)
 plt.scatter(output[-1][:, 0], output[-1][:, 1])
+plt.savefig(os.path.join(save_path, f'output_dist.png'))
 plt.show()
 plt.clf()
 plt.scatter(data[:, 0], data[:, 1])
 plt.show()
+
