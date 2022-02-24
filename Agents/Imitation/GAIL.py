@@ -24,7 +24,7 @@ class newGAIL(Agent):
         self.bce = torch.nn.BCELoss()
         self.smoothL1 = torch.nn.SmoothL1Loss()
 
-        self.discriminator = NN(self.featureExtractor.outSize + self.action_space.n, 1, layers=[64, 32], activation=torch.tanh, final_activation=torch.nn.Softmax(dim=-1))
+        self.discriminator = NN(self.featureExtractor.outSize + self.action_space.n, 1, layers=[64, 32], activation=torch.tanh, final_activation=torch.sigmoid)
         self.optim_d = torch.optim.Adam(params=self.discriminator.parameters(), lr=self.lr)
 
         self.policy = NN(self.featureExtractor.outSize, self.action_space.n, layers=[64, 32], activation=torch.tanh, final_activation=torch.nn.Softmax(dim=-1))

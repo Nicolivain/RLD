@@ -1,7 +1,6 @@
 import matplotlib
 import numpy
 from Agents.Imitation.BehavioralCloning import BehavioralCloning
-from Agents.Imitation.GAIL import GAIL
 from Agents.Imitation.GAIL import newGAIL
 from Tools.core import *
 from Tools.utils import *
