@@ -3,7 +3,7 @@ discount: 0.98  # gamma
 learning_rate: 0.0003
 expert_data_path: 'TP/TP12/expert/expert.pkl'
 train_iter: 10
-k: 10
+k: 5
 reversed_dkl: True
-epsilon: 0.01
+epsilon: 0.2
 entropy_weight: 0.001
