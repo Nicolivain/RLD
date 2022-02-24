@@ -83,3 +83,9 @@ class GailMemory:
 
     def __len__(self):
         return len(self.memory)
+
+    def reset(self):
+        del self.cumulated_r
+        del self.memory
+        self.memory = []
+        self.cumulated_r = []
