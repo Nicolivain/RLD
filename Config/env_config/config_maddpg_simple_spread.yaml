@@ -1,51 +1,16 @@
-action_size: 2      # Taille d'un vecteur d'actions
-activation: !!python/name:torch.nn.functional.leaky_relu ''    # Fonction d'activation des réseaux de neurones utilisés
-finalActivation: !!python/name:torch.tanh ''    # Fonction de sortie de la politique
-agent_types:     # Type d'agent (une entrée par agent, ici 3 agents). 0 = random,  1 = agent DDPG, 2=agent MADDPG
-- 0
-- 0
-- 0
-batchsize: 128       # Taille du batch
-capacity: 1000     # Capacité du buffer
-device: -1           # si <0: cpu sinon numero du gpu
 env: simple_spread      # nom de l'environnement
-freqOptim: 10       # Optimisation tous les freqOptim évènements
-freqTest: 100         # Run de test (sans bruit) tous les freqTest episodes
+freqOptim: 20      # Optimisation tous les freqOptim évènements
+freqTest: 50         # Run de test (sans bruit) tous les freqTest episodes
 nbTest: 1             # nombre d'episodes de test tous les freqTest episodes
-freqVerbose: 1      # Affichage graphique tous les freqVerbose
+freqVerbose: 1000      # Affichage graphique tous les freqVerbose
 freqSave: 1000       # Sauvegarde du modele tous les freqSave episodes
-fromFile: null       # Chargement du modèle à partir de ce repertoire de sauvegarde. Si null, nouveau modèle
-gamma: 0.95         # facteur de discount
-layers:              # Tailles des couches des réseaux
-- 128
-lr:                   # Learning rates pour les politiques des différents agents
-- 0.001
-- 0.001
-- 0.001
-lrq:                  # Learning rates des réseaux Q des différents agents
-- 0.01
-- 0.01
-- 0.01
 maxLengthTest: 250    # longueur maximale d'un episode en test
 maxLengthTrain: 250    # longueur maximale d'un episode en train
-nbSteps: 1            # nombre de pas d'optimisation tous les freqOptim evenements
-nb_subPolicies:       # Nombre de sous-politiques utilisées par agent
-- 1
-- 1
-- 1
 nbEpisodes: 10000000  #Nombre d'episodes total
-noise: !!python/name:__main__.Orn_Uhlen ''    # type de bruit
-polyakP: 0.9                                 # Poids des anciens paramètres dans la mise à jour de Polyak (pour les paramètres de l'acteur)
-polyakQ: 0.9                                 # Poids des anciens paramètres dans la mise à jour de Polyak (pour les paramètres de la critique)
 seed: 5                                       # Graine aléatoire
-sigma_noise: 0.2                             # paramètre sigma du processus de noise
-sigma_noiseTest: 0                          # paramètre sigma du processus de noise en test
-startEvents: 10                             # nombre d'evenements purement aléatoires (avec noise uniquement) en début d'apprentissage
-wdp: 0                                        # decay des paramètres de l'acteur
-wdq: 0                                        # decay des paramètres de critique
-clipGradNormP: 1                            # Clip des gradients de la poitique selon une norme max
-clipGradNormQ: 1                            # Clip des gradients de la critique selon une norme max
 maxReward: 100                              # if >0 clamp rewards in [-maxReward;maxReward]
 import: |                                                                               # a executer avant le chargement de l'environnement
   import multiagent
 env_maker: !!python/name:__main__.make_env ''               # fonction a appeler pour créer l'env
+activation: !!python/name:torch.nn.functional.leaky_relu ''    # Fonction d'activation des réseaux de neurones utilisés
+finalActivation: !!python/name:torch.tanh ''    # Fonction de sortie de la politique

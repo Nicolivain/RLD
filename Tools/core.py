@@ -325,9 +325,8 @@ class NN(nn.Module):
         self.dropout = None
         if dropout > 0:
             self.dropout = torch.nn.Dropout(dropout)
-        if batchnorm :
-            self.batchnorm_test = batchnorm
-            self.batchnorm = nn.BatchNorm1d(in_size)
+        self.batchnorm_test = batchnorm
+        self.batchnorm = nn.BatchNorm1d(in_size)
 
     def setcuda(self, device):
         self.cuda(device=device)
