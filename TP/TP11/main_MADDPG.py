@@ -27,13 +27,14 @@ if __name__ == '__main__':
     # print("Nb d'agents:", nb_agents, "\n Dim_space :", dim, "\n Dim_action :", world.dim_p)
 
     params = load_model_params('MADDPG', env, config, world)
+    print(params)
     agent = MADDPG
     xp = Trainer_MADDPG(agent=agent,
                  env=env,
                  env_config=config,
                  agent_params=params,
                  logger=logger,
-                 reward_rescale=1,
-                 action_rescale=1.0)
+                 reward_rescale=1, #between 0 and 1
+                 action_rescale=0.5) #between 0 and 1
 
     xp.train_agent(outdir)

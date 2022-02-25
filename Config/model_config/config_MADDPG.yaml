@@ -1,10 +1,13 @@
-batch_size: 1000
-memory_size: 100000
-batch_per_learn: 20
-lr_policy: [0.0005, 0.0005, 0.0005] #attention à bien mettre le même nombre de lr que d'agents
-lr_q: [0.1, 0.1, 0.1] #attention à bien mettre le même nombre de lr que d'agents
-rho: 0.01
+batch_size: 1024
+memory_size: 10000 #100000
+batch_per_learn: 10    # nombre de batch pour l'optimisation tous les freqOptim evenements
+lr_policy: [0.0005, 0.0005, 0.0005]
+lr_q: [0.001, 0.001, 0.001]
+rho: 0.1 #0.01 # Poids des anciens paramètres dans la mise à jour de Polyak (pour les paramètres de la critique)
 discount: 0.95  # gamma
-layer: [10, 10]
-start_events: 100000
+layer_p : [128] #[128, 128]
+layer_q : [128, 128]
+start_events: 100 #100000
 explo: 0.1
+grad_clip_policy: 2  # Clip des gradients de la politique selon une norme max
+grad_clip_q: 2   # Clip des gradients de la critique selon une norme max
