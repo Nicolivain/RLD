@@ -1,7 +1,5 @@
 import torch
-from utils import FlowModule, MLP
-
-logabs = lambda x: torch.log(torch.abs(x))
+from utils import FlowModule, MLP, logabs
 
 
 class ActNorm(FlowModule):
@@ -9,47 +7,60 @@ class ActNorm(FlowModule):
         super().__init__()
         self.in_features = in_features
 
-        self.s = torch.randn(self.in_features)
-        self.t = torch.randn(self.in_features)
-        with torch.no_grad():
-            self.s = torch.nn.Parameter((self.s - self.s.mean()) / self.s.std())
-            self.t = torch.nn.Parameter((self.t - self.t.mean()) / self.t.std())
+        self.s = torch.nn.Parameter(torch.randn(1, self.in_features, requires_grad=True))
+        self.t = torch.nn.Parameter(torch.randn(1, self.in_features, requires_grad=True))
+        self.init_done = False
 
     def f(self, x):
+        if not self.init_done:
+            self.s.data = (-torch.log(x.std(dim=0, keepdim=True))).detach()
+            self.t.data = (-(x * torch.exp(self.s)).mean(dim=0, keepdim=True)).detach()
+            self.init_done = True
         y = x * self.s.exp() + self.t
         log_det = self.s.sum()
         return y, log_det
 
     def invf(self, x):
         y = (x - self.t) * (-self.s).exp()
-        log_det = 1/self.s.sum()
+        log_det = -self.s.sum()
         return y, log_det
 
 
 class CouplingLayer(FlowModule):
-    def __init__(self, in_features):
+    def __init__(self, in_features, parity):
         super().__init__()
         self.in_features = in_features
         self.scale = MLP(self.in_features // 2, self.in_features - self.in_features // 2, 100)
         self.shift = MLP(self.in_features // 2, self.in_features - self.in_features // 2, 100)
+        self.parity = parity
 
     def f(self, x):
-        ync, yc = x[:, :x.shape[1] // 2], x[:, x.shape[1] // 2:]
-        sc = self.scale(ync)
-        sh = self.shift(ync)
-        yc = yc * sc.mean().exp() + sh
-        y = torch.cat([ync, yc], axis=1)
-        log_det = sc.mean()  # bc shape is 1000,1
-        return y, log_det
+        x0, x1 = x[:, :self.in_features//2], x[:, self.in_features//2:]
+        if self.parity:
+            x0, x1 = x1, x0
+        s = self.scale(x0)
+        t = self.shift(x0)
+        z0 = x0
+        z1 = torch.exp(s) * x1 + t  #
+        if self.parity:
+            z0, z1 = z1, z0
+        z = torch.cat([z0, z1], dim=1)
+        log_det = torch.sum(s, dim=1)
+        return z, log_det
 
-    def invf(self, x):
-        ync, yc = x[:, :x.shape[1] // 2], x[:, x.shape[1] // 2:]
-        sc = self.scale(ync)
-        sh = self.shift(x[:, x.shape[1] // 2:])
-        yc = (yc - sh) * (-sc.mean()).exp()
-        y = torch.cat([ync, yc], axis=1)
-        log_det = 1/sc.mean()
-        return y, log_det
+    def invf(self, z):
+        z0, z1 = z[:, :self.in_features//2], z[:, self.in_features//2:]
+        if self.parity:
+            z0, z1 = z1, z0
+        s = self.scale(z0)
+        t = self.shift(z0)
+        x0 = z0
+        x1 = (z1 - t) * torch.exp(-s)
+        if self.parity:
+            x0, x1 = x1, x0
+        x = torch.cat([x0, x1], dim=1)
+        log_det = torch.sum(-s, dim=1)
+        return x, log_det
 
 
 class LuConv(FlowModule):
@@ -86,17 +97,17 @@ class LuConv(FlowModule):
 
     def invf(self, x):
         y = x @ self._get_weight().inverse()
-        log_det = self.w_s.sum()
+        log_det = -self.w_s.sum()
         return y, log_det
 
 
 class GlowModule(FlowModule):
-    def __init__(self, in_features):
+    def __init__(self, in_features, parity):
         super().__init__()
         self.in_features = in_features
 
         self.act_norm = ActNorm(self.in_features)
-        self.coupling = CouplingLayer(self.in_features)
+        self.coupling = CouplingLayer(self.in_features, parity)
         self.luconv   = LuConv(self.in_features)
 
     def f(self, x):
