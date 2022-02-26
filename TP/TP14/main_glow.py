@@ -5,11 +5,10 @@ import datetime
 import matplotlib.pyplot as plt
 
 from torch.utils.tensorboard import SummaryWriter
-from GLOW import GlowModule, ActNorm, CouplingLayer, LuConv, Invertible1x1Conv
+from GLOW import ActNorm, CouplingLayer, LuConv
 from utils import GenerativeFlow
 
 from sklearn import datasets
-import itertools
 
 
 torch.manual_seed(1234)
@@ -21,14 +20,13 @@ writer = SummaryWriter(save_path)
 
 ds = ['circles', 'moons'][1]
 in_features = 2
-bs = 128
+bs = 256
 n = 3
 lr = 0.0001
-epochs = 100000
+epochs = 50000
 
 prior = torch.distributions.normal.Normal(torch.zeros(in_features), torch.ones(in_features))
 prior = torch.distributions.independent.Independent(prior, 1)
-#prior = torch.distributions.TransformedDistribution(torch.distributions.Uniform(torch.zeros(2), torch.ones(2)), torch.distributions.SigmoidTransform().inv)
 
 convs = [LuConv(in_features=2) for i in range(n)]
 norms = [ActNorm(in_features=2) for _ in range(n)]

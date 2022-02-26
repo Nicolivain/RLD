@@ -2,8 +2,6 @@ import torch
 from utils import FlowModule, MLP, logabs
 
 
-
-
 class ActNorm(FlowModule):
     def __init__(self, in_features):
         super().__init__()
