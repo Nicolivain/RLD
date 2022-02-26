@@ -17,5 +17,5 @@ class LinFlowModule(FlowModule):
 
     def invf(self, x):
         y = (x - self.t) * (-self.s).exp()
-        log_det = 1 / self.s.sum()
+        log_det = -self.s.sum()
         return y, log_det

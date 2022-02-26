@@ -14,6 +14,10 @@ import seaborn as sns
 sns.set_theme()
 
 
+def logabs(x):
+    return torch.log(torch.abs(x))
+
+
 def to_pandas(t: torch.Tensor, origin: str):
     t = t.cpu().detach().numpy()
     df = pd.DataFrame(data=t, columns=(f"x{ix}" for ix in range(t.shape[1])))

@@ -20,6 +20,7 @@ class newGAIL(Agent):
         self.train_iter      = train_iter  # number of sampled batch per training
         self.k               = k           # number of times a batch is passed in ppo
         self.entropy_weight  = entropy_weight
+        self.cpt             = 0
 
         self.bce = torch.nn.BCELoss()
         self.smoothL1 = torch.nn.SmoothL1Loss()
@@ -117,7 +118,11 @@ class newGAIL(Agent):
             self.memory.store(transition)
 
     def time_to_learn(self):
-        return (not self.test) and self.batch_size <= len(self.memory)
+        self.cpt += 1
+        if self.cpt%10 == 0:
+            return (not self.test) and self.batch_size <= len(self.memory)
+        else:
+            return False
 
     def __load_expert_transition(self, file):
         with open(file, 'rb') as handle:
