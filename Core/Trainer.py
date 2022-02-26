@@ -105,7 +105,8 @@ class Trainer:
 
         print('Done')
 
-class Trainer_MADDPG:
+
+class TrainerMADDPG:
     def __init__(self, agent, env, env_config, agent_params, logger, reward_rescale=1, action_rescale=1):
 
         self.agent  = agent(**agent_params)
@@ -128,12 +129,12 @@ class Trainer_MADDPG:
         while not sum(done) and n_action < self.env_config.maxLengthTrain:
             a = self.agent.act(torch.from_numpy(s).float())
             played_a = self._scale_action(a)
-            s_prime, r, done, info = self.env.step(played_a.copy())  #be careful : only play with a copy of the wanted action (step modifies its argument)
+            s_prime, r, done, info = self.env.step(played_a.copy())  # be careful : only play with a copy of the wanted action (step modifies its argument)
             s_prime = self.agent.featureExtractor.getFeatures(s_prime)
             transitions = {
                 'obs': s,
                 'action': a,
-                'reward': np.clip(r, self.agent.min_reward, self.agent.max_reward)*self.reward_rescale, #rewards are common, thus we can just save the first coordinate
+                'reward': np.clip(r, self.agent.min_reward, self.agent.max_reward)*self.reward_rescale,  # rewards are common, thus we can just save the first coordinate
                 'new_obs': s_prime,
                 'done': done
             }
