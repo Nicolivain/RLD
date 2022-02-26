@@ -138,7 +138,7 @@ class TrainerMADDPG:
                 'new_obs': s_prime,
                 'done': done
             }
-            for i,agent in enumerate(self.agent.agents):
+            for i, agent in enumerate(self.agent.agents):
                 agent.store(transitions)
             score = [score[i]+r[i]*self.reward_rescale for i in range(self.agent.n_agents)]
             n_action += 1
@@ -176,7 +176,7 @@ class TrainerMADDPG:
         if i % self.env_config.freqTest == self.env_config.nbTest and i > self.env_config.freqTest:
             print("End of test, rewards: ", [ele/self.env_config.nbTest for ele in mean])
             itest += 1
-            for k,agent in enumerate(self.agent.agents):
+            for k, agent in enumerate(self.agent.agents):
                 self.logger.direct_write("Test Reward - Agent "+str(k), mean[k] / self.env_config.nbTest, itest)
                 agent.test = False
 
@@ -209,7 +209,7 @@ class TrainerMADDPG:
                 self.logger.direct_write("Rewards - Agent "+str(k), rsum[k], i)
             if i % self.env_config["freqOptim"] == 0 :
                 for k, v in res_dict.items():
-                    self.logger.direct_write(k, v, i//self.env_config["freqOptim"]) #add modulo to plot only when optimization occurs
+                    self.logger.direct_write(k, v, i//self.env_config["freqOptim"])  # add modulo to plot only when optimization occurs
 
             mean = [mean[i]+rsum[i] for i in range(self.agent.n_agents)]
             if i % print_every == 0:

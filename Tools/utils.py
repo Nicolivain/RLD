@@ -9,7 +9,9 @@ from datetime import datetime
 import gym
 import yaml
 from torch.utils.tensorboard import SummaryWriter
-from multiagent import *
+
+from TP.TP11.multiagent.environment import MultiAgentEnv
+import TP.TP11.multiagent.scenarios as scenarios
 
 
 def loadTensorBoard(outdir):
@@ -207,8 +209,9 @@ def init(config_file, algoName, outdir=None, copy_config=True, launch_tb=True):
 
 ########## MADDPG config & env maker ###############
 
+
 def make_env(scenario_name, benchmark=False):
-    '''
+    """
     Creates a MultiAgentEnv object as env. This can be used similar to a gym
     environment by calling env.reset() and env.step().
     Use env.render() to view the environment on the screen.
@@ -223,9 +226,7 @@ def make_env(scenario_name, benchmark=False):
         .observation_space  :   Returns the observation space for each agent
         .action_space       :   Returns the action space for each agent
         .n                  :   Returns the number of Agents
-    '''
-    from multiagent.environment import MultiAgentEnv
-    import multiagent.scenarios as scenarios
+    """
 
     # load scenario from script
     scenario = scenarios.load(scenario_name + ".py").Scenario()
@@ -234,13 +235,23 @@ def make_env(scenario_name, benchmark=False):
     # create multiagent environment
     world.dim_c = 0
     if benchmark:
-        env = MultiAgentEnv(world, scenario.reset_world, scenario.reward, scenario.observation, scenario.benchmark_data)
+        env = MultiAgentEnv(
+            world,
+            scenario.reset_world,
+            scenario.reward,
+            scenario.observation,
+            scenario.benchmark_data)
     else:
-        env = MultiAgentEnv(world, scenario.reset_world, scenario.reward, scenario.observation)
+        env = MultiAgentEnv(
+            world,
+            scenario.reset_world,
+            scenario.reward,
+            scenario.observation)
     env.discrete_action_space = False
     env.discrete_action_input = False
     scenario.reset_world(world)
-    return env,scenario,world
+    return env, scenario, world
+
 
 def init_MADDPG(config_file, algoName, outdir=None, copy_config=True, launch_tb=True):
 
@@ -275,7 +286,6 @@ def load_model_params(model_tag, env, config, world=None):
         params = yaml.safe_load(f)
     params['env'] = env
     params['opt'] = config
-    if world is not None :
+    if world is not None:
         params['world'] = world
     return params
-
