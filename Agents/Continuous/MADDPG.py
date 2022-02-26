@@ -47,7 +47,8 @@ class MADDPG():
     """Dans le cas du MADDPG, il faut utiliser un Q qui prend en compte les paramètres des autres DDPG
     pour une optimisation "collaborative" de tous les DDPG
     """
-    def __init__(self, env, world, opt, layers_p=[100, 100], layers_q=[100,100], batch_per_learn=10, batch_size=1000, memory_size=1000000, lr_q=[0.001], lr_policy=[0.0005], discount=0.99, rho=0.01, start_events=100000, explo=0.1, grad_clip_q = 0.5, grad_clip_policy=0.5, batchnorm=False, **kwargs):
+    def __init__(self, env, world, opt, layers_p=[100, 100], layers_q=[100,100], batch_per_learn=10, batch_size=1000, memory_size=1000000, lr_q=[0.001], lr_policy=[0.0005],
+                 discount=0.99, rho=0.01, start_events=100000, explo=0.1, grad_clip_q = 0.5, grad_clip_policy=0.5, batchnorm=False, **kwargs):
         #super().__init__(env, opt) #seulement si on fait un héritage de agent pour obtenir le self.action_space et self.test
 
         self.n_agents = len(env.agents)
@@ -59,7 +60,6 @@ class MADDPG():
         junk = env.reset()
         junk = [o.shape[0] for o in junk]
         self.obs_size = max(junk)
-        #self.obs_size = len(junk[0])
         self.action_size = world.dim_p
 
         self.agents = [DDPG_adapt(self.n_agents, self.obs_size, self.action_size , layers_p=layers_p, layers_q =layers_q, lr_q=lr_q[k], lr_policy=lr_policy[k], explo=explo, memory_size=memory_size, batchnorm=batchnorm) for k in range(len(lr_q))]
@@ -94,9 +94,10 @@ class MADDPG():
     def act(self, obs):
         for agent in self.agents :
             agent.network.policy_net.eval()
-        #print(obs[0],obs[0].unsqueeze(dim=0).shape)
+
         if self.n_events < self.startEvents:
-            actions = torch.randn(self.n_agents, self.action_size) #random actions to fill the buffer when starting
+            # random actions to fill the buffer when starting
+            actions = torch.randn(self.n_agents, self.action_size)
         else:
             with torch.no_grad():
                 actions = torch.cat([agent.network.policy(obs[k].unsqueeze(0)) for k,agent in enumerate(self.agents)]).view(self.n_agents,self.action_size)
@@ -127,11 +128,10 @@ class MADDPG():
     def _train_batch(self):
         batches = [agent.memory.sample_batch(batch_size=self.batch_size) for agent in self.agents]
 
-        bs = batches[-1]['obs'].shape[0]
+        # bs = batches[-1]['obs'].shape[0]
         b_obs = [batches[k]['obs'] for k in range(self.n_agents)]
-        b_action = [batches[k]['action'] for k in range(self.n_agents)] #pb avec la dimension des actions (384,2) au lieu de (128,3,2) #le torch.vstack dans le sample_batch de la Memory a été remplacé par torch.stack
-        #print(b_action[-1].shape)
-        b_reward = [batches[k]['reward'] for k in range(self.n_agents)] #common rewards between agents over each step only for simple spread
+        b_action = [batches[k]['action'] for k in range(self.n_agents)]
+        b_reward = [batches[k]['reward'] for k in range(self.n_agents)]
         b_new = [batches[k]['new_obs'] for k in range(self.n_agents)]
         b_done = [batches[k]['done'] for k in range(self.n_agents)]
 
@@ -169,7 +169,7 @@ class MADDPG():
 
             agent.optim_q.zero_grad()
             q_loss.backward()
-            #to prevent from gradient explosion
+            # to prevent from gradient exploding
             torch.nn.utils.clip_grad_norm_(agent.network.q_net.parameters(), self.grad_clip_q)
             agent.optim_q.step()
 
