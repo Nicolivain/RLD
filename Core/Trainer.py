@@ -116,25 +116,30 @@ class Trainer_MADDPG:
         self.reward_rescale = reward_rescale
         self.action_rescale = action_rescale
 
+        # set the seed
+        torch.manual_seed(self.env_config.seed)
+        np.random.seed(self.env_config.seed)
+
     def run_episode(self, s):
         s = self.agent.featureExtractor.getFeatures(s)
         done = [False]
-        score = 0
+        score = [0]*self.agent.n_agents
         n_action = 0
         while not sum(done) and n_action < self.env_config.maxLengthTrain:
             a = self.agent.act(torch.from_numpy(s).float())
             played_a = self._scale_action(a)
             s_prime, r, done, info = self.env.step(played_a.copy())  #be careful : only play with a copy of the wanted action (step modifies its argument)
             s_prime = self.agent.featureExtractor.getFeatures(s_prime)
-            transition = {
+            transitions = {
                 'obs': s,
                 'action': a,
-                'reward': np.clip(r[0], self.agent.min_reward, self.agent.max_reward)*self.reward_rescale, #rewards are common, thus we can just save the first coordinate
+                'reward': np.clip(r, self.agent.min_reward, self.agent.max_reward)*self.reward_rescale, #rewards are common, thus we can just save the first coordinate
                 'new_obs': s_prime,
                 'done': done
             }
-            self.agent.store(transition)
-            score = r[0]*self.reward_rescale
+            for i,agent in enumerate(self.agent.agents):
+                agent.store(transitions)
+            score = [score[i]+r[i]*self.reward_rescale for i in range(self.agent.n_agents)]
             n_action += 1
             s = s_prime
 
@@ -162,21 +167,23 @@ class Trainer_MADDPG:
         # C'est le moment de tester l'agent
         if i % self.env_config.freqTest == 0 and i >= self.env_config.freqTest:  # Same as train for now
             print("Test time! ")
-            self.agent.test = True
-            mean = 0
+            for agent in self.agent.agents :
+                agent.test = True
+            mean = np.zeros(self.agent.n_agents)
 
         # On a fini cette session de test
         if i % self.env_config.freqTest == self.env_config.nbTest and i > self.env_config.freqTest:
-            print("End of test, common reward: ", mean)
+            print("End of test, rewards: ", [ele/self.env_config.nbTest for ele in mean])
             itest += 1
-            self.logger.direct_write("Test Reward ", mean / self.env_config.nbTest, itest)
-            self.agent.test = False
+            for k,agent in enumerate(self.agent.agents):
+                self.logger.direct_write("Test Reward - Agent "+str(k), mean[k] / self.env_config.nbTest, itest)
+                agent.test = False
 
         return mean, itest
 
     def train_agent(self, outdir, print_every=1):
         itest    = 0
-        mean     = 0
+        mean     = [0]*self.agent.n_agents
         res_dict = {}
         for i in range(self.env_config.nbEpisodes):
 
@@ -197,13 +204,16 @@ class Trainer_MADDPG:
                 res_dict = self.agent.learn(True)
 
             # Logging
-            self.logger.direct_write("Common Rewards", rsum, i)
+            for k in range(self.agent.n_agents) :
+                self.logger.direct_write("Rewards - Agent "+str(k), rsum[k], i)
             if i % self.env_config["freqOptim"] == 0 :
                 for k, v in res_dict.items():
                     self.logger.direct_write(k, v, i//self.env_config["freqOptim"]) #add modulo to plot only when optimization occurs
 
-            mean += rsum
+            mean = [mean[i]+rsum[i] for i in range(self.agent.n_agents)]
             if i % print_every == 0:
-                print('Episode {:5d} \t Total reward: {:3.1f} \t #Action: {:4d}'.format(i, rsum, n_action))
-
+                print('Episode {:5d} \t Reward obtained in {:4d} actions for each agent:'.format(i, n_action))
+                for k in range(self.agent.n_agents):
+                    print('Agent {:1d}: {:3.1f} \t'.format(k, rsum[k]))
+                print('\n')
         print('Done')
