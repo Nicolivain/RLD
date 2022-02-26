@@ -128,8 +128,7 @@ class MADDPG(Agent):
         b_done = [batches[k]['done'] for k in range(self.n_agents)]
 
         # update q net
-        q_loss, q_mean = self._update_q_all(
-            b_obs, b_action, b_reward, b_new, b_done)  # torch.cat(b_obs sur la 2e dim)
+        q_loss, q_mean = self._update_q_all(b_obs, b_action, b_reward, b_new, b_done)  # torch.cat(b_obs sur la 2e dim)
 
         # update policy
         loss_policy = self._update_policy_all(b_obs)
@@ -150,14 +149,11 @@ class MADDPG(Agent):
             # we start with computing the target
             with torch.no_grad():
                 # print(b_new[i][:,i,:].shape)
-                target_next_act = torch.cat([agent.target_net.policy(
-                    b_new[i][:, i, :]) for i, agent in enumerate(self.agents)], dim=-1)
+                target_next_act = torch.cat([agent.target_net.policy(b_new[i][:, i, :]) for i, agent in enumerate(self.agents)], dim=-1)
                 # print("target",target_next_act.shape)
                 # print("b_act", b_action[i].view(bs,-1).shape)
-                target = b_reward[i] + self.discount * agent.target_net.q(
-                    b_new[i].view(bs, -1), target_next_act) * (~b_done[i]).float()
-            preds_q = agent.network.q(b_obs[i].view(
-                bs, -1), b_action[i].view(bs, -1))
+                target = b_reward[i][:, :, i] + self.discount * agent.target_net.q(b_new[i].view(bs, -1), target_next_act) * (~b_done[i][:, :, i]).float()
+            preds_q = agent.network.q(b_obs[i].view(bs, -1), b_action[i].view(bs, -1))
             q_mean_all.append(preds_q.mean())
 
             q_loss = agent.loss(preds_q, target.detach())
@@ -166,8 +162,7 @@ class MADDPG(Agent):
             agent.optim_q.zero_grad()
             q_loss.backward()
             # to prevent from gradient exploding
-            torch.nn.utils.clip_grad_norm_(
-                agent.network.q_net.parameters(), self.grad_clip_q)
+            torch.nn.utils.clip_grad_norm_(agent.network.q_net.parameters(), self.grad_clip_q)
             agent.optim_q.step()
 
             # switch agent net to eval mode
@@ -185,8 +180,7 @@ class MADDPG(Agent):
         for i, agent in enumerate(self.agents):
             # print("b_obs", b_obs[i][:,i,:].shape)
             with torch.no_grad():
-                pred_act = torch.cat([agent.network.policy(
-                    b_obs[k][:, k, :]) for k, agent in enumerate(self.agents)], dim=-1)
+                pred_act = torch.cat([agent.network.policy(b_obs[k][:, k, :]) for k, agent in enumerate(self.agents)], dim=-1)
             # print("pred_act policy", pred_act.shape)
             # preds_q = agent.network.q(b_obs[i].view(bs, -1), b_action[i].view(bs, -1))
             pred_q = agent.network.q(b_obs[i].view(bs, -1), pred_act)
