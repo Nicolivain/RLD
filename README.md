@@ -18,6 +18,7 @@ Hyperparameters of each algorithm can be tuned in 'Config/model_parameters', and
 - SAC, Adaptative Temperature SAC
 - Imitation Learning (GAIL)
 - GAN, VAE
+- Normalizing Flow: GLOW
 
 ### Environnement:
 Grid World, Cartpole, Lunar Lander, Pendulum
