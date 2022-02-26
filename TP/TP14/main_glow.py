@@ -18,10 +18,10 @@ start_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 save_path = "runs/tag-" + start_time + '_glow'
 writer = SummaryWriter(save_path)
 
-ds = ['circles', 'moons'][1]
+ds = ['circles', 'moons'][0]
 in_features = 2
 bs = 256
-n = 3
+n = 5
 lr = 0.0001
 epochs = 50000
 
