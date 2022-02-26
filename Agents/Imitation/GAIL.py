@@ -2,7 +2,6 @@ import torch
 import pickle
 from Tools.core import NN
 from Agents.Agent import Agent
-from Agents.Policy.PPO import AdaptativePPO
 from Structure.GailMemory import GailMemory
 from Tools.exploration import *
 

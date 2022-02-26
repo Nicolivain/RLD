@@ -20,7 +20,7 @@ writer = SummaryWriter(save_path)
 
 ds = ['circles', 'moons'][0]
 in_features = 2
-bs = 256
+bs = 128
 n = 5
 lr = 0.0001
 epochs = 50000
