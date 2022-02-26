@@ -10,9 +10,6 @@ import gym
 import yaml
 from torch.utils.tensorboard import SummaryWriter
 
-from TP.TP11.multiagent.environment import MultiAgentEnv
-import TP.TP11.multiagent.scenarios as scenarios
-
 
 def loadTensorBoard(outdir):
     t = threading.Thread(target=launchTensorBoard, args=([outdir]))
@@ -227,6 +224,8 @@ def make_env(scenario_name, benchmark=False):
         .action_space       :   Returns the action space for each agent
         .n                  :   Returns the number of Agents
     """
+    from TP.TP11.multiagent.environment import MultiAgentEnv
+    import TP.TP11.multiagent.scenarios as scenarios
 
     # load scenario from script
     scenario = scenarios.load(scenario_name + ".py").Scenario()
