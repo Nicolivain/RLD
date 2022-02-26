@@ -1,0 +1,11 @@
+env: simple_tag #{simple_spread, simple_tag, simple_adversary} # nom de l'environnement
+freqOptim: 10      # Optimisation tous les freqOptim évènements
+freqTest: 100         # Run de test (sans bruit) tous les freqTest episodes
+nbTest: 3             # nombre d'episodes de test tous les freqTest episodes
+freqVerbose: 1000      # Affichage graphique tous les freqVerbose
+freqSave: 1000       # Sauvegarde du modele tous les freqSave episodes
+maxLengthTest: 100    # longueur maximale d'un episode en test
+maxLengthTrain: 25    # longueur maximale d'un episode en train
+nbEpisodes: 10000000  #Nombre d'episodes total
+seed: 5  # Graine aléatoire
+
