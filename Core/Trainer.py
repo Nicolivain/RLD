@@ -13,6 +13,10 @@ class Trainer:
         self.reward_rescale = reward_rescale
         self.action_rescale = action_rescale
 
+        # set the seed
+        torch.manual_seed(self.env_config.seed)
+        np.random.seed(self.env_config.seed)
+
     def run_episode(self, s):
         s = self.agent.featureExtractor.getFeatures(s)
         done = False
@@ -106,20 +110,9 @@ class Trainer:
         print('Done')
 
 
-class TrainerMADDPG:
+class TrainerMultiAgent(Trainer):
     def __init__(self, agent, env, env_config, agent_params, logger, reward_rescale=1, action_rescale=1):
-
-        self.agent  = agent(**agent_params)
-        self.env    = env
-        self.logger = logger
-
-        self.env_config     = env_config
-        self.reward_rescale = reward_rescale
-        self.action_rescale = action_rescale
-
-        # set the seed
-        torch.manual_seed(self.env_config.seed)
-        np.random.seed(self.env_config.seed)
+        super().__init__(agent, env, env_config, agent_params, logger, reward_rescale, action_rescale)
 
     def run_episode(self, s):
         s = self.agent.featureExtractor.getFeatures(s)
@@ -145,24 +138,6 @@ class TrainerMADDPG:
             s = s_prime
 
         return score, n_action
-
-    def _scale_action(self, a):
-        if type(a) == list:
-            return [self.action_rescale * c for c in a]
-        elif type(a) == torch.Tensor:
-            return self.action_rescale * a.numpy()
-        else:
-            return self.action_rescale * a
-
-    def _display_setup(self, i):
-        # On souhaite afficher l'environnement (attention à ne pas trop afficher car çà ralentit beaucoup)
-        if i % int(self.env_config["freqVerbose"]) == 0:
-            verbose = True
-        else:
-            verbose = False
-
-        if verbose:
-            self.env.render()
 
     def _test_agent_setup(self, i, mean, itest):
         # C'est le moment de tester l'agent
