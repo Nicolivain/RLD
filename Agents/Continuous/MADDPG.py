@@ -162,7 +162,7 @@ class MADDPG():
                 # print("b_act", b_action[i].view(bs,-1).shape)
                 target = b_reward[i] + self.discount * agent.target_net.q(b_new[i].view(bs,-1), target_next_act) * (~b_done[i]).float()
             preds_q = agent.network.q(b_obs[i].view(bs,-1), b_action[i].view(bs,-1))
-            q_mean_all.append(target.mean()) # preds_q.mean()
+            q_mean_all.append(preds_q.mean())
 
             q_loss = agent.loss(preds_q, target.detach())
             q_loss_all.append(q_loss)
