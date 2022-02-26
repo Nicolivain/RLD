@@ -7,7 +7,7 @@ from Structure.Memory import Memory
 from Tools.core import NN
 from Tools.core import Orn_Uhlen
 from Agents.Continuous.DDPG import *
-from Tools.core import NothingToDo
+from Tools.core import *
 
 class QPolicyNet_MA():
     def __init__(self, n_agents, in_size, action_space_size, layers_p, layers_q, final_activation_q=None, final_activation_p=torch.nn.Tanh(), activation_q=torch.nn.LeakyReLU(), activation_p=torch.nn.LeakyReLU(), dropout=0, batchnorm = False):
@@ -57,13 +57,15 @@ class MADDPG():
 
         # Compute the dimensions of the env
         junk = env.reset()
-        self.obs_size = len(junk[0])
+        junk = [o.shape[0] for o in junk]
+        self.obs_size = max(junk)
+        #self.obs_size = len(junk[0])
         self.action_size = world.dim_p
 
         self.agents = [DDPG_adapt(self.n_agents, self.obs_size, self.action_size , layers_p=layers_p, layers_q =layers_q, lr_q=lr_q[k], lr_policy=lr_policy[k], explo=explo, memory_size=memory_size, batchnorm=batchnorm) for k in range(len(lr_q))]
 
         self.config = opt
-        self.featureExtractor = NothingToDo(env) #opt.featExtractor(env)
+        self.featureExtractor = NothingToDo(env, self.obs_size) #opt.featExtractor(env)
         self.loss = torch.nn.SmoothL1Loss()
         self.p_lr = lr_policy #list
         self.q_lr = lr_q #list

@@ -1,4 +1,4 @@
-env: simple_spread # nom de l'environnement
+env: simple_tag # nom de l'environnement
 freqOptim: 10      # Optimisation tous les freqOptim évènements
 freqTest: 100         # Run de test (sans bruit) tous les freqTest episodes
 nbTest: 3             # nombre d'episodes de test tous les freqTest episodes

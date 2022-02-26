@@ -38,18 +38,21 @@ class FeatureExtractor(object):
 
 
 class NothingToDo(FeatureExtractor):
-    def __init__(self, env):
+    def __init__(self, env, size):
         super().__init__()
         ob = np.array(env.reset())#torch.tensor(np.array(env.reset()))
         ob = ob.reshape(-1)
         self.outSize = len(ob)
+        self.obs_size = size
 
     def getFeatures(self, obs):
-        #print(len(obs))
-        return np.array(obs) #np.stack(obs).astype(np.float)
+        return np.array(padObs(obs, self.obs_size)) #np.stack(obs).astype(np.float)
 
 # Ajoute le numero d'iteration (a priori pas vraiment utile et peut
 # destabiliser dans la plupart des cas etudiés)
+
+def padObs(obs,size):
+    return([np.concatenate((o,np.zeros(size-o.shape[0]))) if o.shape[0]<size else o for o in obs])
 
 
 class AddTime(FeatureExtractor):
