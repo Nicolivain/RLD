@@ -35,6 +35,6 @@ if __name__ == '__main__':
                  agent_params=params,
                  logger=logger,
                  reward_rescale=1, #between 0 and 1
-                 action_rescale=0.5) #between 0 and 1
+                 action_rescale=1) #between 0 and 1
 
     xp.train_agent(outdir)

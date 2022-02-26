@@ -1,16 +1,13 @@
-env: simple_spread      # nom de l'environnement
-freqOptim: 20      # Optimisation tous les freqOptim évènements
-freqTest: 50         # Run de test (sans bruit) tous les freqTest episodes
-nbTest: 1             # nombre d'episodes de test tous les freqTest episodes
+env: simple_spread # nom de l'environnement
+freqOptim: 10      # Optimisation tous les freqOptim évènements
+freqTest: 100         # Run de test (sans bruit) tous les freqTest episodes
+nbTest: 3             # nombre d'episodes de test tous les freqTest episodes
 freqVerbose: 1000      # Affichage graphique tous les freqVerbose
 freqSave: 1000       # Sauvegarde du modele tous les freqSave episodes
-maxLengthTest: 250    # longueur maximale d'un episode en test
-maxLengthTrain: 250    # longueur maximale d'un episode en train
+maxLengthTest: 100    # longueur maximale d'un episode en test
+maxLengthTrain: 25    # longueur maximale d'un episode en train
 nbEpisodes: 10000000  #Nombre d'episodes total
-seed: 5                                       # Graine aléatoire
-maxReward: 100                              # if >0 clamp rewards in [-maxReward;maxReward]
-import: |                                                                               # a executer avant le chargement de l'environnement
-  import multiagent
+seed: 5  # Graine aléatoire
 env_maker: !!python/name:__main__.make_env ''               # fonction a appeler pour créer l'env
 activation: !!python/name:torch.nn.functional.leaky_relu ''    # Fonction d'activation des réseaux de neurones utilisés
 finalActivation: !!python/name:torch.tanh ''    # Fonction de sortie de la politique

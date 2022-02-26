@@ -40,13 +40,13 @@ class FeatureExtractor(object):
 class NothingToDo(FeatureExtractor):
     def __init__(self, env):
         super().__init__()
-        ob = torch.tensor(np.array(env.reset()))
+        ob = np.array(env.reset())#torch.tensor(np.array(env.reset()))
         ob = ob.reshape(-1)
         self.outSize = len(ob)
 
     def getFeatures(self, obs):
-        # print(obs)
-        return np.array(obs)
+        #print(len(obs))
+        return np.array(obs) #np.stack(obs).astype(np.float)
 
 # Ajoute le numero d'iteration (a priori pas vraiment utile et peut
 # destabiliser dans la plupart des cas etudiés)
