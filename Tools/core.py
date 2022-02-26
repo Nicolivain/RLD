@@ -25,7 +25,7 @@ class Orn_Uhlen:
 # Extracteurs de Features à partir des observations
 # ##################################"
 
-# classe abstraite générique
+# Classe abstraite générique
 class FeatureExtractor(object):
     def __init__(self):
         super().__init__()
@@ -38,21 +38,40 @@ class FeatureExtractor(object):
 
 
 class NothingToDo(FeatureExtractor):
-    def __init__(self, env, size):
+    def __init__(self, env):
         super().__init__()
-        ob = np.array(env.reset())#torch.tensor(np.array(env.reset()))
+        ob = env.reset()
         ob = ob.reshape(-1)
         self.outSize = len(ob)
-        self.obs_size = size
 
     def getFeatures(self, obs):
-        return np.array(padObs(obs, self.obs_size)) #np.stack(obs).astype(np.float)
+        # print(obs)
+        return obs
+
+
+# Pad les observations selon la plus grande en dimension
+# Pour le MADDPG
+
+class PadObsExtractor(FeatureExtractor):
+    def __init__(self, env):
+        super().__init__()
+
+        junk = env.reset()
+        junk = [o.shape[0] for o in junk]
+        self.obs_size = max(junk)
+
+        ob = np.array(junk).reshape(-1)
+        self.outSize = len(ob)
+
+    def getFeatures(self, obs):
+        return np.array(self.__get_padded_obs(obs))  # np.stack(obs).astype(np.float)
+
+    def __get_padded_obs(self, obs):
+        return [np.concatenate((o, np.zeros(self.obs_size - o.shape[0]))) if o.shape[0] < self.obs_size else o for o in obs]
+
 
 # Ajoute le numero d'iteration (a priori pas vraiment utile et peut
 # destabiliser dans la plupart des cas etudiés)
-
-def padObs(obs,size):
-    return([np.concatenate((o,np.zeros(size-o.shape[0]))) if o.shape[0]<size else o for o in obs])
 
 
 class AddTime(FeatureExtractor):
@@ -206,20 +225,10 @@ class DistsFromStates(FeatureExtractor):
 
 # Si on veut travailler avec des CNNs plutôt que des NN classiques
 # (nécessite une entrée adaptée)
-class convMDP(nn.Module):
-    def __init__(
-            self,
-            inSize,
-            outSize,
-            layers=[],
-            convs=None,
-            finalActivation=None,
-            batchNorm=False,
-            init_batchNorm=False,
-            activation=torch.tanh,
-            dropout=0.0,
-            maxPool=None):
-        super(convMDP, self).__init__()
+
+class ConvMDP(nn.Module):
+    def __init__(self, inSize, outSize, layers=[], convs=None, finalActivation=None, batchNorm=False, init_batchNorm=False, activation=torch.tanh, dropout=0.0, maxPool=None):
+        super(ConvMDP, self).__init__()
         # print(inSize,outSize)
 
         self.inSize = inSize

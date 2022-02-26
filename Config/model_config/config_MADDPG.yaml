@@ -8,7 +8,7 @@ discount: 0.95  # gamma
 layer_p : [128] #[128, 128]
 layer_q : [128]
 batchnorm: False #True
-start_events: 10 #100
+start_episodes: 10 #100
 explo: 0.2
 grad_clip_policy: 1  # Clip des gradients de la politique selon une norme max
 grad_clip_q: 1   # Clip des gradients de la critique selon une norme max

@@ -1,4 +1,4 @@
-from Core.Trainer import *
+from Core.Trainer import TrainerMADDPG
 from Tools.utils import *
 from Agents.Continuous.MADDPG import *
 import matplotlib
@@ -16,12 +16,12 @@ if __name__ == '__main__':
     params = load_model_params('MADDPG', env, config, world)
 
     agent = MADDPG
-    xp = Trainer_MADDPG(agent=agent,
-                        env=env,
-                        env_config=config,
-                        agent_params=params,
-                        logger=logger,
-                        reward_rescale=1,  # between 0 and 1
-                        action_rescale=1)  # between 0 and 1
+    xp = TrainerMADDPG(agent=agent,
+                       env=env,
+                       env_config=config,
+                       agent_params=params,
+                       logger=logger,
+                       reward_rescale=1,  # between 0 and 1
+                       action_rescale=1)  # between 0 and 1
 
     xp.train_agent(outdir)

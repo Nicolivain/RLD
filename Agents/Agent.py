@@ -11,14 +11,6 @@ class Agent(ABC):
 
         self.featureExtractor = config.featExtractor(env)
 
-        """
-        self.discount       = config.gamma
-        self.decay          = config.decay
-        self.alpha          = config.learningRate
-        self.explo          = config.explo
-        self.exploMode      = config.exploMode  # 0: epsilon greedy, 1: ucb
-        """
-
         self.test           = False
 
     @abstractmethod
