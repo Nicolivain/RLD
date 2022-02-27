@@ -25,3 +25,6 @@ class Agent(ABC):
 
     def time_to_learn(self):
         return True
+
+    def save(self, path):
+        pass
