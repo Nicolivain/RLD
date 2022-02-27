@@ -2,6 +2,7 @@
 ## Reinforcement Learning and Advanced Deep Learning
 
 ### Course from Master M2A (DAC) @ Sorbonne Université Paris.
+This course covers reinforcement learning algorithms and generative deep learning methods.  
 Course website: https://dac.lip6.fr/master/rld-2021-2022/
 
 ### Getting started:
