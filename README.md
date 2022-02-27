@@ -1,5 +1,5 @@
 # RLD
-##Reinforcement Learning and Advanced Deep Learning
+## Reinforcement Learning and Advanced Deep Learning
 
 ### Course from Master M2A (DAC) @ Sorbonne Université Paris.
 Course website: https://dac.lip6.fr/master/rld-2021-2022/
