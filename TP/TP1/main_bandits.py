@@ -1,10 +1,10 @@
 import numpy as np
 from numpy.core.fromnumeric import argmax 
-from Bandits.Bandits import UCB, LinUCB
+from Agents.Bandits.Bandits import UCB, LinUCB
 
 if __name__ == '__main__':
 
-    data = np.loadtxt('Dataset/CTR.txt', dtype=str)
+    data = np.loadtxt('TP/TP1/CTR.txt', dtype=str)
 
     # Baselines
 

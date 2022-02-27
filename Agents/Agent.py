@@ -1,5 +1,4 @@
 from abc import abstractmethod, ABC
-import pickle
 
 
 class Agent(ABC):
@@ -26,17 +25,3 @@ class Agent(ABC):
 
     def time_to_learn(self):
         return True
-
-    def save(self, path):
-        # TODO: fix the save bug
-        """
-        Unknown bug: can't pickle NoneType ??
-        f = open(path, 'wb')
-        pickle.dump(self, f)
-        f.close()
-        """
-        pass
-
-    def load(self, path):
-        # TODO
-        pass

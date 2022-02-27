@@ -34,8 +34,6 @@ if __name__ == '__main__':
     agent = [ValueIterationAgent(env.action_space, env),
              PolicyIterationAgent(env.action_space, env)][1]
 
-
-
     agent.compute_policy(epsilon, gamma)
 
     episode_count = 100
@@ -50,7 +48,7 @@ if __name__ == '__main__':
             env.render()
         j = 0
         rsum = 0
-        l=[]
+        l = []
         while True:
             action = agent.act(obs)
             obs, reward, done, _ = env.step(action)
