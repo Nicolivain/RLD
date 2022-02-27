@@ -1,0 +1,14 @@
+batch_size: 128
+memory_size: 10000 #100000
+batch_per_learn: 1    # nombre de batch pour l'optimisation tous les freqOptim evenements
+lr_policy: [0.001, 0.001, 0.001]
+lr_q: [0.01, 0.01, 0.01]
+rho: 0.9 #0.01 # Poids des anciens paramètres dans la mise à jour de Polyak (pour les paramètres de la critique)
+discount: 0.95  # gamma
+layer_p : [128] #[128, 128]
+layer_q : [128]
+batchnorm: False #True
+start_episodes: 10 #100
+explo: 0.2
+grad_clip_policy: 1  # Clip des gradients de la politique selon une norme max
+grad_clip_q: 1   # Clip des gradients de la critique selon une norme max

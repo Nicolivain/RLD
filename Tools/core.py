@@ -25,7 +25,7 @@ class Orn_Uhlen:
 # Extracteurs de Features à partir des observations
 # ##################################"
 
-# classe abstraite générique
+# Classe abstraite générique
 class FeatureExtractor(object):
     def __init__(self):
         super().__init__()
@@ -47,6 +47,28 @@ class NothingToDo(FeatureExtractor):
     def getFeatures(self, obs):
         # print(obs)
         return obs
+
+
+# Pad les observations selon la plus grande en dimension
+# Pour le MADDPG
+
+class PadObsExtractor(FeatureExtractor):
+    def __init__(self, env):
+        super().__init__()
+
+        junk = env.reset()
+        junk = [o.shape[0] for o in junk]
+        self.obs_size = max(junk)
+
+        ob = np.array(junk).reshape(-1)
+        self.outSize = len(ob)
+
+    def getFeatures(self, obs):
+        return np.array(self.__get_padded_obs(obs))  # np.stack(obs).astype(np.float)
+
+    def __get_padded_obs(self, obs):
+        return [np.concatenate((o, np.zeros(self.obs_size - o.shape[0]))) if o.shape[0] < self.obs_size else o for o in obs]
+
 
 # Ajoute le numero d'iteration (a priori pas vraiment utile et peut
 # destabiliser dans la plupart des cas etudiés)
@@ -203,20 +225,10 @@ class DistsFromStates(FeatureExtractor):
 
 # Si on veut travailler avec des CNNs plutôt que des NN classiques
 # (nécessite une entrée adaptée)
-class convMDP(nn.Module):
-    def __init__(
-            self,
-            inSize,
-            outSize,
-            layers=[],
-            convs=None,
-            finalActivation=None,
-            batchNorm=False,
-            init_batchNorm=False,
-            activation=torch.tanh,
-            dropout=0.0,
-            maxPool=None):
-        super(convMDP, self).__init__()
+
+class ConvMDP(nn.Module):
+    def __init__(self, inSize, outSize, layers=[], convs=None, finalActivation=None, batchNorm=False, init_batchNorm=False, activation=torch.tanh, dropout=0.0, maxPool=None):
+        super(ConvMDP, self).__init__()
         # print(inSize,outSize)
 
         self.inSize = inSize
@@ -313,7 +325,7 @@ class convMDP(nn.Module):
 # Accepte une liste de tailles de couches pour la variables layers (permet
 # de définir la structure)
 class NN(nn.Module):
-    def __init__(self, in_size, out_size, layers=[], final_activation=None, activation=nn.Tanh(), dropout=0.0):
+    def __init__(self, in_size, out_size, layers=[], final_activation=None, activation=nn.Tanh(), dropout=0.0, batchnorm = False):
         super(NN, self).__init__()
         self.layers = nn.ModuleList([])
         for x in layers:
@@ -325,6 +337,8 @@ class NN(nn.Module):
         self.dropout = None
         if dropout > 0:
             self.dropout = torch.nn.Dropout(dropout)
+        self.batchnorm_test = batchnorm
+        self.batchnorm = nn.BatchNorm1d(in_size)
 
     def setcuda(self, device):
         self.cuda(device=device)
@@ -332,6 +346,8 @@ class NN(nn.Module):
     def forward(self, x):
         x = self.layers[0](x)
         for i in range(1, len(self.layers)):
+            if self.batchnorm_test:
+                x = self.batchnorm(x)
             x = self.activation(x)
             if self.dropout is not None:
                 x = self.dropout(x)

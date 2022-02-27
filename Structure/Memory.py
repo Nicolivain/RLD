@@ -139,6 +139,7 @@ class Memory:
             done_mask = transition['done']
             done_mask_lst.append([done_mask])
 
+        # torch.stack(a_lst, dim=0) if multi_act else torch.tensor(a_lst)
         dct = {'obs': torch.tensor(s_lst, dtype=torch.float), 'action': agg(a_lst),
                'reward': torch.tensor(r_lst, dtype=torch.float), 'new_obs': torch.tensor(s_prime_lst, dtype=torch.float),
                'done': torch.tensor(done_mask_lst)}
