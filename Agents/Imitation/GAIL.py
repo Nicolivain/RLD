@@ -6,7 +6,7 @@ from Structure.GailMemory import GailMemory
 from Tools.exploration import *
 
 
-class newGAIL(Agent):
+class GAIL(Agent):
     def __init__(self, env, opt, expert_data_path, epsilon=0.01, learning_rate=0.001, discount=0.99, batch_size=64, train_iter=1, k=1, entropy_weight=0.001, **kwargs):
         super().__init__(env, opt)
 

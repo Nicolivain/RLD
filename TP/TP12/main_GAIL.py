@@ -1,7 +1,6 @@
 import matplotlib
 import numpy
-from Agents.Imitation.BehavioralCloning import BehavioralCloning
-from Agents.Imitation.GAIL import newGAIL
+from Agents.Imitation.GAIL import GAIL
 from Tools.core import *
 from Tools.utils import *
 
@@ -18,7 +17,7 @@ if __name__ == '__main__':
     env, config, outdir, logger = init('Config/env_config/config_random_lunar.yaml', 'GAIL', outdir=None,
                                        copy_config=False, launch_tb=False)
     params = load_model_params('GAIL', env, config)
-    agent = newGAIL
+    agent = GAIL
 
     xp = Trainer(agent          = agent,
                  env            = env,
