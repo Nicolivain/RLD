@@ -19,7 +19,7 @@ class GAIL(Agent):
         self.train_iter      = train_iter  # number of sampled batch per training
         self.k               = k           # number of times a batch is passed in ppo
         self.entropy_weight  = entropy_weight
-        self.cpt             = 0
+        self.n_episodes      = 0
 
         self.bce = torch.nn.BCELoss()
         self.smoothL1 = torch.nn.SmoothL1Loss()
@@ -117,8 +117,8 @@ class GAIL(Agent):
             self.memory.store(transition)
 
     def time_to_learn(self):
-        self.cpt += 1
-        if self.cpt%10 == 0:
+        self.n_epsides += 1
+        if self.n_episodes % self.config.freqOptim == 0:
             return (not self.test) and self.batch_size <= len(self.memory)
         else:
             return False

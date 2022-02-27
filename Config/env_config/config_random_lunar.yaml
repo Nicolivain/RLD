@@ -5,7 +5,7 @@ freqSave: 1000
 freqTest: 100
 nbTest: 10
 freqVerbose: 100000
-freqOptim: 1000                                                                          # Optimisation de la politique tous les freqOptim evenements
+freqOptim: 10                                                                       # Optimisation de la politique tous les freqOptim episodes
 fromFile: null
 nbEpisodes: 50000
 maxLengthTest: 300                                                                    # Longueur maxi des trajectoires en Test
