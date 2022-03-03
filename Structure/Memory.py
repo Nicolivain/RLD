@@ -127,7 +127,7 @@ class Memory:
 
     def sample_batch(self, batch_size, n_batch=1):
         _, _, mini_batch = self.sample(batch_size)
-        s_lst, a_lst, r_lst, s_prime_lst, done_mask_lst = [], [], [], [], []
+        s_lst, a_lst, r_lst, s_prime_lst, done_mask_lst, goal_lst = [], [], [], [], [], []
 
         multi_act = type(mini_batch[0]['action']) == torch.Tensor
         agg = torch.vstack if multi_act else torch.tensor
@@ -138,11 +138,13 @@ class Memory:
             s_prime_lst.append(transition['new_obs'])
             done_mask = transition['done']
             done_mask_lst.append([done_mask])
+            if 'goal' in transition:
+                goal_lst.append(transition['goal'])
 
         # torch.stack(a_lst, dim=0) if multi_act else torch.tensor(a_lst)
         dct = {'obs': torch.tensor(s_lst, dtype=torch.float), 'action': agg(a_lst),
                'reward': torch.tensor(r_lst, dtype=torch.float), 'new_obs': torch.tensor(s_prime_lst, dtype=torch.float),
-               'done': torch.tensor(done_mask_lst)}
+               'done': torch.tensor(done_mask_lst), 'goal' : torch.tensor(goal_lst)}
         return dct
 
     def update(self, idx, tderr):
