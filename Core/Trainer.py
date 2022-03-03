@@ -248,7 +248,7 @@ class TrainerDQNGoal(Trainer):
 
         self.logger.direct_write('Reward', r_sum, i)
         self.logger.direct_write('Replay Buffer Size', self.agent.memory.nentities, i)
-        self.logger.direct_write('Eps', self.agent.explo, i)
+        self.logger.direct_write('Explo', self.agent.explo, i)
         self.logger.direct_write('Final position/x final', next_obs[0], i)
         self.logger.direct_write('Final position/y final', next_obs[1], i)
 
@@ -356,7 +356,7 @@ class TrainerHER(TrainerDQNGoal):
 
         self.logger.direct_write('Reward', r_sum, i)
         self.logger.direct_write('Replay Buffer Size', self.agent.memory.nentities, i)
-        self.logger.direct_write('Eps', self.agent.explo, i)
+        self.logger.direct_write('Explo', self.agent.explo, i)
         self.logger.direct_write('Final position/x final', next_obs[0], i)
         self.logger.direct_write('Final position/y final', next_obs[1], i)
 
@@ -443,7 +443,7 @@ class TrainerIGS(TrainerDQNGoal):
 
         self.logger.direct_write('Reward', r_sum, i)
         self.logger.direct_write('Replay Buffer Size', self.agent.memory.nentities, i)
-        self.logger.direct_write('Eps', self.agent.explo, i)
+        self.logger.direct_write('Explo', self.agent.explo, i)
         self.logger.direct_write('Final position/x final', next_obs[0], i)
         self.logger.direct_write('Final position/y final', next_obs[1], i)
 
