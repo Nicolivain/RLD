@@ -13,7 +13,8 @@ Hyperparameters of each algorithm can be tuned in 'Config/model_parameters', and
 - UCB and LinUCB Bandits
 - Policy and Value Iteration 
 - QLearning, SARSA, DynaQ
-- Deep Q Learning (minDQN), DuelingDQN
+- Deep Q Learning (minDQN), DuelingDQN, TargetDQN, Double DQN
+- Goal DQN, Hindsight Experience Replay, Iterative Goal Sampling
 - Actor Critic A2C
 - Trusted Region Actor Critic PPO and Clipped PPO
 - DDPG, Multi Agent DDPG
@@ -23,8 +24,7 @@ Hyperparameters of each algorithm can be tuned in 'Config/model_parameters', and
 - Normalizing Flow: GLOW
 
 ### Environnement:
-Grid World, Cartpole, Lunar Lander, Pendulum
+Grid World, Cartpole, Lunar Lander, Pendulum, MultiAgent
     
 ### Ressources:
-- Reinforcement Learning with Pytorch from p-christ: https://github.com/p-christ/Deep-Reinforcement-Learning-Algorithms-with-PyTorch/
 - Lilian Weng's blog on Policy Algorithm: https://lilianweng.github.io/lil-log/2018/04/08/policy-gradient-algorithms.html 
