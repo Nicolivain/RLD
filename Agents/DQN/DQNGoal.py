@@ -63,7 +63,7 @@ class DQNGoal(Agent):
             return False
         else:
             self.n_events +=1
-            if self.n_events % self.freq_optim == 0 and self.memory.nentities > self.startEvents: #éventuellement modifier la condition ici
+            if self.n_events % self.freq_optim == 0 and self.memory.nentities > self.startEvents:
                 return True
 
     def act(self, obs, goal):
