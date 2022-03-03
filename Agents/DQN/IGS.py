@@ -2,7 +2,7 @@ import copy
 
 import numpy as np
 import torch
-from Agents.DQN import DQNGoal
+from Agents.DQN.DQNGoal import DQNGoal
 from pytorch_lightning import seed_everything
 from torch import nn
 from torch.nn import functional

@@ -1,7 +1,8 @@
 import matplotlib
 import torch
 
-from Agents.DQN.DQNGoal import DQNGoal, IGS
+from Agents.DQN.DQNGoal import DQNGoal
+from Agents.DQN.IGS import IGS
 from Tools.core import *
 from Tools.utils import *
 from Structure.Memory import Memory
@@ -14,7 +15,7 @@ matplotlib.use("TkAgg")
 
 if __name__ == '__main__':
 
-    mode = ['DQNGoal', 'HER', 'IGS'][2]
+    mode = ['DQNGoal', 'HER', 'IGS'][0]
 
     # For IGS, take Plan3.txt map in config file
     # For HER, take Plan2.txt map in config file
