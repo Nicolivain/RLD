@@ -15,11 +15,11 @@ matplotlib.use("TkAgg")
 
 if __name__ == '__main__':
 
-    mode = ['VanillaDQN', 'ReplayDQN', 'TargetDQN', 'minDQN', 'DuelingDQN'][0]
+    mode = ['VanillaDQN', 'ReplayDQN', 'TargetDQN', 'DQN', 'DuelingDQN'][0]
 
     env, config, outdir, logger = init('Config/env_config/config_random_cartpole.yaml', mode, outdir=None)
-    params = load_model_params('VanillaDQN', env, config)
-    agent = {'VanillaDQN': VanillaDQN, 'ReplayDQN': ReplayDQN, 'TargetDQN': TargetDQN, 'minDQN': DQN, 'DuelingDQN': DuelingDQN}[mode]
+    params = load_model_params('DQN', env, config)
+    agent = {'VanillaDQN': VanillaDQN, 'ReplayDQN': ReplayDQN, 'TargetDQN': TargetDQN, 'DQN': DQN, 'DuelingDQN': DuelingDQN}[mode]
 
     xp = Trainer(agent=agent,
                  env=env,
