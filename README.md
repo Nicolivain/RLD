@@ -13,8 +13,8 @@ Hyperparameters of each algorithm can be tuned in 'Config/model_parameters', and
 - UCB and LinUCB Bandits
 - Policy and Value Iteration 
 - QLearning, SARSA, DynaQ
-- Deep Q Learning (minDQN), DuelingDQN, TargetDQN, Double DQN
-- Goal DQN, Hindsight Experience Replay, Iterative Goal Sampling
+- Deep Q Learning (minDQN), DuelingDQN, TargetDQN, Double VanillaDQN
+- Goal VanillaDQN, Hindsight Experience Replay, Iterative Goal Sampling
 - Actor Critic A2C
 - Trusted Region Actor Critic PPO and Clipped PPO
 - DDPG, Multi Agent DDPG

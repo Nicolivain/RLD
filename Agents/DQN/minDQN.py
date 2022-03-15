@@ -1,10 +1,10 @@
-from Agents.DQN.DQN import DQN
+from Agents.DQN.DQN import VanillaDQN
 from Tools.core import NN
 import torch
 from copy import deepcopy
 
 
-class MinDQN(DQN):
+class MinDQN(VanillaDQN):
     def __init__(self, env, opt, layers, memory_size=10000, batch_size=100, freq_update_target=100, learning_rate=0.001, explo=0.1, explo_mode=0, discount=0, decay=0.9999, **kwargs):
         super().__init__(env, opt, layers, memory_size=memory_size,  learning_rate=learning_rate, explo=explo, explo_mode=explo_mode, discount=discount, decay=decay)
         self.batch_size = batch_size

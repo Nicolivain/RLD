@@ -1,20 +1,13 @@
-import copy
-
 import numpy as np
 import torch
 from Agents.Agent import Agent
-from pytorch_lightning import seed_everything
 from torch import nn
 from torch.nn import functional
-from torch.utils.tensorboard import SummaryWriter
-from tqdm import tqdm
 from Structure.Memory import Memory
-from Tools.exploration import pick_greedy, pick_epsilon_greedy, pick_ucb
-from copy import deepcopy
 
 
 class QNet(nn.Module):
-    """Q-values network used in the following DQN Agent"""
+    """Q-values network used in the following VanillaDQN Agent"""
     def __init__(self, dim_in, dim_out, hidden_sizes):
         super().__init__()
         sizes = [dim_in] + hidden_sizes
@@ -115,9 +108,3 @@ class DQNGoal(Agent):
 
     def store(self, transition):
         self.memory.store(transition)
-
-    def save(self, outputDir):
-        pass
-
-    def load(self, inputDir):
-        pass

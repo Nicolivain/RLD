@@ -6,7 +6,7 @@ from Tools.core import NN
 from Tools.exploration import pick_greedy, pick_epsilon_greedy, pick_ucb
 
 
-class DQN(Agent):
+class VanillaDQN(Agent):
 
     def __init__(self, env, opt, layers, memory_size=10000, learning_rate=0.001, explo=0.1, explo_mode=0, discount=0.99, decay=0.9999, **kwargs):
         super().__init__(env, opt)

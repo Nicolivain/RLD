@@ -24,6 +24,7 @@ if __name__ == '__main__':
     env, config, outdir, logger = init('Config/env_config/config_goals_gridworld.yaml', mode, outdir=None)
     params = load_model_params('DQNCurriculum', env, config)
     print(params)
+
     agent = {'DQNGoal': DQNGoal, 'HER': DQNGoal, 'IGS': IGS}[mode]
     Trainer = {'DQNGoal': TrainerDQNGoal, 'HER': TrainerHER, 'IGS': TrainerIGS}[mode]
 

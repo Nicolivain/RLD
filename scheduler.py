@@ -1,6 +1,6 @@
 import os
 
-from Agents.DQN.DQN import DQN
+from Agents.DQN.DQN import VanillaDQN
 from Agents.DQN.DuelingDQN import DuelingDQN
 from Agents.DQN.ReplayDQN import ReplayDQN
 from Agents.DQN.TargetDQN import TargetDQN
@@ -20,7 +20,7 @@ if __name__ == '__main__':
 
     # SEARCH CONFIG:
 
-    mode  = {0: 'DQN',
+    mode  = {0: 'VanillaDQN',
              1: 'ReplayDQN',
              2: 'TargetDQN',
              3: 'minDQN',
@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     # Tous les params ne sont pas necessairement utiles pour tous les modeles
 
-    models = {'DQN' : DQN,
+    models = {'VanillaDQN' : VanillaDQN,
               'ReplayDQN': ReplayDQN,
               'TargetDQN': TargetDQN,
               'minDQN': MinDQN,
@@ -71,7 +71,7 @@ if __name__ == '__main__':
                    }[env]
 
     agent_params = {
-                    'DQN'       : 'Config/model_config/config_DQN.yaml',
+                    'VanillaDQN'       : 'Config/model_config/config_DQN.yaml',
                     'ReplayDQN' : 'Config/model_config/config_DQN.yaml',
                     'TargetDQN' : 'Config/model_config/config_DQN.yaml',
                     'minDQN'    : 'Config/model_config/config_DQN.yaml',
