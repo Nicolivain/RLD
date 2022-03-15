@@ -1,4 +1,4 @@
-from Agents.DQN.DQN import VanillaDQN
+from Agents.DQN.VanillaDQN import VanillaDQN
 import torch
 from copy import deepcopy
 

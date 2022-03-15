@@ -1,10 +1,10 @@
 import os
 
-from Agents.DQN.DQN import VanillaDQN
+from Agents.DQN.VanillaDQN import VanillaDQN
 from Agents.DQN.DuelingDQN import DuelingDQN
 from Agents.DQN.ReplayDQN import ReplayDQN
 from Agents.DQN.TargetDQN import TargetDQN
-from Agents.DQN.minDQN import MinDQN
+from Agents.DQN.DQN import DQN
 
 from Agents.Policy.A2C import A2C
 from Agents.Policy.PPO import AdaptativePPO
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     models = {'VanillaDQN' : VanillaDQN,
               'ReplayDQN': ReplayDQN,
               'TargetDQN': TargetDQN,
-              'minDQN': MinDQN,
+              'minDQN': DQN,
               'DuelingDQN': DuelingDQN,
               'A2C': A2C,
               'PPO': AdaptativePPO,
