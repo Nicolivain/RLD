@@ -200,7 +200,6 @@ class TrainerMultiAgent(Trainer):
         print('Done')
 
 
-
 class TrainerDQNGoal(Trainer):
     def __init__(self, agent, env, env_config, agent_params, logger, reward_rescale=1, action_rescale=1, startEvents=2000):
         super().__init__(agent, env, env_config, agent_params, logger, reward_rescale, action_rescale)
@@ -257,16 +256,6 @@ class TrainerDQNGoal(Trainer):
 
         return r_sum
 
-    def _display_setup(self, i):
-        # On souhaite afficher l'environnement (attention à ne pas trop afficher car çà ralentit beaucoup)
-        if i % int(self.env_config["freqVerbose"]) == 0:
-            verbose = True
-        else:
-            verbose = False
-
-        if verbose:
-            self.env.render()
-
     def train_agent(self, outdir, print_every=10):
         itest    = 0
         mean     = 0
@@ -302,6 +291,7 @@ class TrainerDQNGoal(Trainer):
             mean += r_sum
 
         print('Done')
+
 
 class TrainerHER(TrainerDQNGoal):
     def __init__(self, agent, env, env_config, agent_params, logger, reward_rescale=1, action_rescale=1, startEvents=2000):
@@ -364,6 +354,7 @@ class TrainerHER(TrainerDQNGoal):
             print('Episode {:5d} Reward: {:3.1f} #Action: {:4d}'.format(i, r_sum, n_actions))
 
         return r_sum
+
 
 class TrainerIGS(TrainerDQNGoal):
     def __init__(self, agent, env, env_config, agent_params, logger, reward_rescale=1, action_rescale=1, startEvents=2000):
@@ -449,7 +440,5 @@ class TrainerIGS(TrainerDQNGoal):
 
         if i % print_every == 0:
             print('Episode {:5d} Reward: {:3.1f} #Action: {:4d}'.format(i, r_sum, n_actions))
-
-
 
         return r_sum
