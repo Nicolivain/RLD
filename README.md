@@ -3,7 +3,7 @@
 
 ### Course from Master M2A (DAC) @ Sorbonne Université Paris.
 This course covers reinforcement learning algorithms and generative deep learning methods.  
-Course website: https://dac.lip6.fr/master/rld-2021-2022/
+Course website: https://dac.lip6.fr/master/rld-2021-2022/ 
 
 ### Getting started:
 main.py is a simple way to call other mains in command line, scheduler.py contains an hyperparameters search tool. A main file for each algorithm/TME is available under 'TP' folder.
