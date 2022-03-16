@@ -1,0 +1,13 @@
+batch_size: 1000
+memory_size: 1000000
+learning_rate: 0.001
+layers: [200, 200]
+discount: 0.99  # gamma
+explo: 0.1
+explo_mode: 0  # 0: espilon greedy, 1: ucb
+decay: 1 # sans decay
+freq_update_target: 1000    # fréquence d'optimisation du réseau cible
+alpha: 3
+beta: 0.9
+HER: True   # for IGS, one can add HER or not
+freq_feed_GoalBuffer: 10

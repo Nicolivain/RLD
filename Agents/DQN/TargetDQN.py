@@ -1,11 +1,11 @@
-from Agents.DQN.DQN import DQN
+from Agents.DQN.VanillaDQN import VanillaDQN
 import torch
 from copy import deepcopy
 
 
-class TargetDQN(DQN):
+class TargetDQN(VanillaDQN):
     """
-    DQN with target network but no memory (ie: Vanilla DQN with target network)
+    VanillaDQN with target network but no memory (ie: Vanilla VanillaDQN with target network)
     """
     def __init__(self, env, opt, layers, learning_rate=0.001, explo=0.01, explo_mode=0, discount=0.99, freq_update_target=1000, decay=0.9999, **kwargs):
         super().__init__(env, opt, layers, memory_size=1,  learning_rate=learning_rate, explo=explo, explo_mode=explo_mode, discount=discount, decay=decay)

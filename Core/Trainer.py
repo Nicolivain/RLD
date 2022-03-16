@@ -1,5 +1,7 @@
 import torch
 import numpy as np
+from pytorch_lightning import seed_everything
+from numpy import random
 
 
 class Trainer:
@@ -13,7 +15,10 @@ class Trainer:
         self.reward_rescale = reward_rescale
         self.action_rescale = action_rescale
 
-        # set the seed
+        # set the seed & create a deterministic env
+        seed_everything(self.env_config.seed)
+        env.seed(self.env_config.seed)
+        env.action_space.seed(self.env_config.seed)
         torch.manual_seed(self.env_config.seed)
         np.random.seed(self.env_config.seed)
 
@@ -93,7 +98,7 @@ class Trainer:
             if i % self.env_config.freqSave == 0:
                 self.agent.save(outdir + "/save_" + str(i))
 
-            # Runing the episode and training
+            # Running the episode and training
             rsum, n_action = self.run_episode(s)
             if self.agent.time_to_learn():
                 res_dict = self.agent.learn(True)
@@ -193,3 +198,247 @@ class TrainerMultiAgent(Trainer):
                     print('Agent {:1d}: {:3.1f} \t'.format(k, rsum[k]))
                 print('\n')
         print('Done')
+
+
+class TrainerDQNGoal(Trainer):
+    def __init__(self, agent, env, env_config, agent_params, logger, reward_rescale=1, action_rescale=1, startEvents=2000):
+        super().__init__(agent, env, env_config, agent_params, logger, reward_rescale, action_rescale)
+
+        self.startEvents = startEvents
+
+    def run_episode(self, s, i, print_every=10):
+        self.agent.test = (i % self.env_config.freqTest == 0 and i > 0)
+        obs = self.agent.featureExtractor.getFeatures(self.env.reset()).squeeze()
+        done = False
+        r_sum = 0
+        goal, _ = self.env.sampleGoal()
+        goal = self.agent.featureExtractor.getFeatures(goal).squeeze()
+        n_actions = 0
+
+        while n_actions < (self.env_config.maxLengthTest if self.agent.test else self.env_config.maxLengthTrain):
+            action = self.agent.act(obs, goal)
+            next_obs, _, _, _ = self.env.step(action)
+            next_obs = self.agent.featureExtractor.getFeatures(next_obs).squeeze()  # actually use phi(next_obs)
+            done = (next_obs == goal).all()
+            reward = 1. if done else -0.1
+
+            transition = {
+                'obs': obs,
+                'action': action,
+                'reward': reward,
+                'new_obs': next_obs,
+                'done': done,
+                'goal': goal
+            }
+            self.agent.memory.store(transition=transition)
+
+            obs = next_obs.copy()
+
+            r_sum += reward
+            n_actions += 1
+
+        if not self.agent.test and self.agent.memory.nentities > self.startEvents:
+            # learn
+            loss = self.agent.learn(True)
+            self.logger.direct_write('Loss', loss, i)
+
+        if i % self.agent.freq_update_target:
+            self.agent.update_target_network()
+
+        self.logger.direct_write('Reward', r_sum, i)
+        self.logger.direct_write('Replay Buffer Size', self.agent.memory.nentities, i)
+        self.logger.direct_write('Explo', self.agent.explo, i)
+        self.logger.direct_write('Final position/x final', next_obs[0], i)
+        self.logger.direct_write('Final position/y final', next_obs[1], i)
+
+        if i % print_every == 0:
+            print('Episode {:5d} Reward: {:3.1f} #Action: {:4d}'.format(i, r_sum, n_actions))
+
+        return r_sum
+
+    def train_agent(self, outdir, print_every=10):
+        itest    = 0
+        mean     = 0
+        res_dict = {}
+        nb_test = 0
+        for i in range(self.env_config.nbEpisodes):
+            self.agent.test = i > 0 and i % self.env_config.freqTest == 0
+
+            # Initialize environnement
+            s = self.env.reset()
+
+            # Check if we display
+            self._display_setup(i)
+
+            # Check if we save
+            if i % self.env_config.freqSave == 0:
+                self.agent.save(outdir + "/save_" + str(i))
+
+            # Running the episode and training
+            if i % self.env_config.freqTest == 0 and i >= self.env_config.freqTest:
+                print("Test time!")
+                mean = 0
+                self.agent.test = True
+
+            if i % self.env_config.freqTest == self.env_config.nbTest and i > self.env_config.freqTest:
+                print("End of test, mean reward=", mean / self.env_config.nbTest)
+                nb_test += 1
+                self.logger.direct_write("Reward Test", mean / self.env_config.nbTest, nb_test)
+                self.agent.test = False
+
+            # Run episode
+            r_sum = self.run_episode(s, i, print_every=print_every)
+            mean += r_sum
+
+        print('Done')
+
+
+class TrainerHER(TrainerDQNGoal):
+    def __init__(self, agent, env, env_config, agent_params, logger, reward_rescale=1, action_rescale=1, startEvents=2000):
+        super().__init__(agent, env, env_config, agent_params, logger, reward_rescale, action_rescale, startEvents)
+
+        self.startEvents = startEvents
+
+    def run_episode(self, s, i, print_every=10):
+        self.agent.test = (i % self.env_config.freqTest == 0 and i > 0)
+        obs = self.agent.featureExtractor.getFeatures(self.env.reset()).squeeze()
+        done = False
+        r_sum = 0
+        goal, _ = self.env.sampleGoal()
+        goal = self.agent.featureExtractor.getFeatures(goal).squeeze()
+        n_actions = 0
+        transitions_temp = []
+
+        while n_actions < (self.env_config.maxLengthTest if self.agent.test else self.env_config.maxLengthTrain) and not done:
+            action = self.agent.act(obs, goal)
+            next_obs, _, _, _ = self.env.step(action)
+            next_obs = self.agent.featureExtractor.getFeatures(next_obs).squeeze()  # actually use phi(next_obs)
+            done = (next_obs == goal).all()
+            reward = 1. if done else -0.1
+            # we first save usual
+            transition = {
+                'obs': obs,
+                'action': action,
+                'new_obs': next_obs,
+            }
+            transitions_temp.append(transition)
+            transition.update({'reward': reward, 'done': done, 'goal': goal})
+            self.agent.store(transition)
+            r_sum += reward
+            n_actions += 1
+            obs = next_obs.copy()
+
+        # we now save transitions with goal=end_of episode (obs)
+        artificial_goal = obs
+        for trans in transitions_temp:
+            d = (trans['new_obs'] == artificial_goal).all()
+            r = 1. if d else -0.1
+            trans.update({'reward': r, 'done': d, 'goal': artificial_goal})
+            self.agent.store(trans)
+
+        if not self.agent.test and self.agent.memory.nentities > self.startEvents:
+            # learn
+            loss = self.agent.learn(True)
+            self.logger.direct_write('Loss', loss, i)
+
+        if i % self.agent.freq_update_target:
+            self.agent.update_target_network()
+
+        self.logger.direct_write('Reward', r_sum, i)
+        self.logger.direct_write('Replay Buffer Size', self.agent.memory.nentities, i)
+        self.logger.direct_write('Explo', self.agent.explo, i)
+        self.logger.direct_write('Final position/x final', next_obs[0], i)
+        self.logger.direct_write('Final position/y final', next_obs[1], i)
+
+        if i % print_every == 0:
+            print('Episode {:5d} Reward: {:3.1f} #Action: {:4d}'.format(i, r_sum, n_actions))
+
+        return r_sum
+
+
+class TrainerIGS(TrainerDQNGoal):
+    def __init__(self, agent, env, env_config, agent_params, logger, reward_rescale=1, action_rescale=1, startEvents=2000):
+        super().__init__(agent, env, env_config, agent_params, logger, reward_rescale, action_rescale, startEvents)
+
+        self.startEvents = startEvents
+
+    def run_episode(self, s, i, print_every=10):
+        self.agent.test = (i % self.env_config.freqTest == 0 and i > 0)
+        obs = self.agent.featureExtractor.getFeatures(self.env.reset()).squeeze()
+        done = False
+        r_sum = 0
+        goal = None
+        n_actions = 0
+        transitions_temp = []
+
+        while n_actions < (self.env_config.maxLengthTest if self.agent.test else self.env_config.maxLengthTrain) and not done:
+
+            # IGS step
+            if goal is None:
+                igs = random.random() < self.agent.beta and len(self.agent.G) > 0
+                if igs:
+                    # sample in buffer G
+                    goal, entropy = self.agent.sample_artificial_goal()
+                    goal = goal
+                    self.logger.direct_write("Entropy", entropy[0].item(), sum(self.agent.N.values()))
+                else:
+                    # real goal sampling
+                    goal, _ = self.env.sampleGoal()
+                    goal = self.agent.featureExtractor.getFeatures(goal).squeeze()
+
+            action = self.agent.act(obs, goal)
+            next_obs, _, _, _ = self.env.step(action)
+            next_obs = self.agent.featureExtractor.getFeatures(next_obs).squeeze()
+            done = (next_obs == goal).all()
+            reward = 1. if done else -0.1
+            # we first save usual
+            transition = {
+                'obs': obs,
+                'action': action,
+                'new_obs': next_obs,
+            }
+            transitions_temp.append(transition)
+            transition.update({'reward': reward, 'done': done, 'goal': goal})
+            self.agent.store(transition)
+
+            r_sum += reward
+            n_actions += 1
+            obs = next_obs.copy()
+
+        # HER step
+        if self.agent.HER:
+            artificial_goal = obs
+            for trans in transitions_temp:
+                d = (trans['new_obs'] == artificial_goal).all()
+                r = 1. if d else -0.1
+                trans.update({'reward': r, 'done': d, 'goal': artificial_goal})
+                self.agent.store(trans)
+
+        # Update counters
+        if igs:
+            self.agent.N[str(goal)] += 1  # we sample the goal once
+            if done:
+                self.agent.V[str(goal)] += 1  # we reached the goal
+
+        # Store terminal state obs
+        if self.agent.n_events % self.agent.freq_feed_GoalBuffer == 0:
+            self.agent.goal_in_buffer(obs)
+
+        if not self.agent.test and self.agent.memory.nentities > self.startEvents:
+            # learn
+            loss = self.agent.learn(True)
+            self.logger.direct_write('Loss', loss, i)
+
+        if i % self.agent.freq_update_target:
+            self.agent.update_target_network()
+
+        self.logger.direct_write('Reward', r_sum, i)
+        self.logger.direct_write('Replay Buffer Size', self.agent.memory.nentities, i)
+        self.logger.direct_write('Explo', self.agent.explo, i)
+        self.logger.direct_write('Final position/x final', next_obs[0], i)
+        self.logger.direct_write('Final position/y final', next_obs[1], i)
+
+        if i % print_every == 0:
+            print('Episode {:5d} Reward: {:3.1f} #Action: {:4d}'.format(i, r_sum, n_actions))
+
+        return r_sum

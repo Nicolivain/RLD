@@ -2,7 +2,7 @@ from copy import deepcopy
 
 import torch
 
-from Agents.DQN.minDQN import MinDQN
+from Agents.DQN.DQN import DQN
 from Tools.core import NN
 
 
@@ -21,9 +21,9 @@ class DuelingNN(torch.nn.Module):
         return v + a - a.sum(dim=-1).reshape(-1, 1) / self.action_space_dim
 
 
-class DuelingDQN(MinDQN):
+class DuelingDQN(DQN):
     """
-    Modifying the minDQN to implement the Dueling DQN
+    Modifying the minDQN to implement the Dueling VanillaDQN
     We only need to replace the Q network with the new DuelingNN
     """
     def __init__(self, env, opt, layers,  memory_size=10000, batch_size=100, freq_update_target=100, learning_rate=0.001, explo=0.1, explo_mode=0, discount=0, decay=0.9999, **kwargs):
