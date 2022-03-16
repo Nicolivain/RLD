@@ -5,6 +5,9 @@ from numpy import random
 
 
 class Trainer:
+    """
+    The main training class for all agents. See below for overrides in specific cases
+    """
     def __init__(self, agent, env, env_config, agent_params, logger, reward_rescale=1, action_rescale=1):
 
         self.agent  = agent(**agent_params)
