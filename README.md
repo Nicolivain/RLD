@@ -24,7 +24,7 @@ Hyperparameters of each algorithm can be tuned in 'Config/model_parameters', and
 - Normalizing Flow: GLOW
 
 ### Environnement:
-Grid World, Cartpole, Lunar Lander, Pendulum, MultiAgent
+Grid World, Cartpole, Lunar Lander, Pendulum, Continuous Lunar Lander, Mountain Car, MultiAgent
     
 ### Ressources and references:
 - [[1]](https://lilianweng.github.io/lil-log/2018/04/08/policy-gradient-algorithms.html) Lilian Weng's blog on Policy Algorithm
